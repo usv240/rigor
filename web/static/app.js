@@ -48,7 +48,11 @@ async function run() {
         body: JSON.stringify({ text: paper.value }),
       });
     }
-    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    if (!res.ok) {
+      let msg = `Server error ${res.status}`;
+      try { const e = await res.json(); if (e.error) msg = e.error; } catch (_) {}
+      throw new Error(msg);
+    }
     render(await res.json());
   } catch (e) {
     report.innerHTML = `<div class="empty">⚠️ ${e.message}. Check your API key / connection and try again.</div>`;
@@ -112,14 +116,15 @@ function render(r) {
       <div class="ring" style="--val:${r.score};--rc:${rc}"><div class="num">${r.score}<small>/100</small></div></div>
       <div class="sc-meta">
         <h3>Integrity report
-          <i class="info" data-tip="A 0-100 summary. Lower means more, or more serious, problems were found. It is a guide to where to look, not a grade.">i</i>
+          <i class="info" data-tip="A 0-100 summary, weighted by severity. Lower means more, or more serious, problems. It updates live as you dismiss findings.">i</i>
+          <span id="revised" class="revised" style="display:none">revised by you</span>
         </h3>
         <div class="row">
-          <span><span class="dotc" style="background:#ef4444"></span><b>${r.errors}</b> error${r.errors !== 1 ? "s" : ""}
+          <span><span class="dotc" style="background:#ef4444"></span><b id="cErr">${r.errors}</b> error${r.errors !== 1 ? "s" : ""}
             <i class="info" data-tip="Provably wrong by exact math. High confidence: the reported number contradicts what it must be.">i</i></span>
-          <span><span class="dotc" style="background:#f59e0b"></span><b>${r.warnings}</b> to review
+          <span><span class="dotc" style="background:#f59e0b"></span><b id="cWarn">${r.warnings}</b> to review
             <i class="info" data-tip="An AI-flagged judgment call, like causal or over-general wording. Not a proof: use your own judgment.">i</i></span>
-          <span><span class="dotc" style="background:#16a34a"></span><b>${okCount}</b> clean
+          <span><span class="dotc" style="background:#16a34a"></span><b id="cOk">${okCount}</b> clean
             <i class="info" data-tip="Checked and found consistent. No problem here.">i</i></span>
           <span class="muted">· ${r.n_tests} test(s), ${r.n_means} mean(s) · ${esc(r.source || "")}</span>
         </div>
@@ -151,10 +156,30 @@ function render(r) {
     const id = Number(btn.dataset.id);
     if (dismissed.has(id)) { dismissed.delete(id); el.classList.remove("dismissed"); btn.textContent = "Dismiss"; }
     else { dismissed.add(id); el.classList.add("dismissed"); btn.textContent = "Undo"; }
-    const kept = report.querySelector("#keptcount");
-    if (kept) kept.textContent = `${lastR.findings.length - dismissed.size} kept`;
+    recomputeScore();
   }));
   report.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function recomputeScore() {
+  // Genuine human-in-the-loop: recompute the weighted score from reviewer-approved findings.
+  const kept = lastR.findings.filter(f => !dismissed.has(f._id));
+  const penalty = kept.reduce((s, f) => s + (f.weight || 0), 0);
+  const score = Math.max(0, Math.round(100 - penalty * 5));  // matches report.py
+  const rc = score >= 80 ? "#16a34a" : score >= 50 ? "#f59e0b" : "#ef4444";
+  const ring = report.querySelector(".ring");
+  if (ring) {
+    ring.style.setProperty("--val", score);
+    ring.style.setProperty("--rc", rc);
+    ring.querySelector(".num").innerHTML = `${score}<small>/100</small>`;
+  }
+  const c = { ERROR: 0, WARNING: 0, OK: 0 };
+  kept.forEach(f => c[f.severity]++);
+  const set = (id, v) => { const el = report.querySelector("#" + id); if (el) el.textContent = v; };
+  set("cErr", c.ERROR); set("cWarn", c.WARNING); set("cOk", c.OK);
+  set("keptcount", `${kept.length} kept`);
+  const rev = report.querySelector("#revised");
+  if (rev) rev.style.display = dismissed.size ? "" : "none";
 }
 
 function downloadReport(r) {

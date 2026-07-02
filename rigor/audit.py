@@ -86,6 +86,7 @@ def audit_text(text: str) -> AuditReport:
                 recomputed=f"p = {r.computed_p:.4g}",
                 plain=plain,
                 fix=fix,
+                weight=2.0 if r.decision_error else 0.0 if r.consistent else 0.8,
             )
         )
 
@@ -106,6 +107,7 @@ def audit_text(text: str) -> AuditReport:
                 recomputed="achievable" if g.possible else f"nearest {g.nearest_possible}",
                 plain=plain,
                 fix=fix,
+                weight=0.0 if g.possible else 1.5,
             )
         )
 
@@ -125,6 +127,7 @@ def audit_text(text: str) -> AuditReport:
                         recomputed=f"needs N >= {dfn.implied_min_n}",
                         plain=plain,
                         fix=fix,
+                        weight=1.5,
                     )
                 )
 
@@ -148,6 +151,7 @@ def audit_text(text: str) -> AuditReport:
                 recomputed="contradicts a verified result" if grounded else "AI-flagged - needs review",
                 plain=plain,
                 fix=fix,
+                weight=1.5 if grounded else 0.4,
             )
         )
 

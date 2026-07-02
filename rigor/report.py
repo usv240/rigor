@@ -26,6 +26,7 @@ class Finding:
     recomputed: str
     plain: str = ""      # what it means, in plain language
     fix: str = ""        # what to do about it
+    weight: float = 0.0  # severity weight used in scoring (e.g. decision error = 2.0)
 
     def to_dict(self) -> dict:
         d = self.__dict__.copy()
@@ -49,12 +50,11 @@ class AuditReport:
         return [f for f in self.findings if f.severity is Severity.WARNING]
 
     def score(self) -> int:
-        """0-100 integrity score. Errors hurt a lot, warnings a little."""
-        checked = len(self.findings)
-        if checked == 0:
-            return 100
-        penalty = len(self.errors) * 1.0 + len(self.warnings) * 0.4
-        return max(0, round(100 * (1 - penalty / checked)))
+        """0-100 integrity score: points off per issue, weighted by severity. A
+        decision-flipping error (2.0) hurts more than a harmless typo (0.8), which
+        hurts more than a soft AI flag (0.4). A clean paper stays at 100."""
+        penalty = sum(f.weight for f in self.findings)
+        return max(0, round(100 - penalty * 5))
 
     def to_dict(self) -> dict:
         return {

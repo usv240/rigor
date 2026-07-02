@@ -43,18 +43,23 @@ def sample() -> dict:
 
 @app.post("/api/audit")
 def api_audit(body: AuditIn) -> JSONResponse:
-    result = audit_text(body.text).to_dict()
+    try:
+        result = audit_text(body.text).to_dict()
+    except Exception as exc:  # noqa: BLE001 - surface a real message to the UI
+        return JSONResponse(status_code=502, content={"error": f"{type(exc).__name__}: {exc}"})
     result["source"] = "pasted text"
     return JSONResponse(result)
 
 
 @app.post("/api/audit/pdf")
 async def api_audit_pdf(file: UploadFile = File(...)) -> JSONResponse:
-    data = await file.read()
-    with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or ".pdf").suffix) as tmp:
-        tmp.write(data)
-        tmp_path = tmp.name
-    text = load_text(tmp_path)
-    result = audit_text(text).to_dict()
+    try:
+        data = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or ".pdf").suffix) as tmp:
+            tmp.write(data)
+            tmp_path = tmp.name
+        result = audit_text(load_text(tmp_path)).to_dict()
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse(status_code=502, content={"error": f"{type(exc).__name__}: {exc}"})
     result["source"] = file.filename
     return JSONResponse(result)

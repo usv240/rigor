@@ -25,7 +25,9 @@ LLM_MODEL = os.getenv("QWEN_LLM_MODEL", "qwen-plus")
 def client() -> OpenAI:
     if not API_KEY:
         raise RuntimeError("DASHSCOPE_API_KEY not set - add it to your .env")
-    return OpenAI(api_key=API_KEY, base_url=BASE_URL)
+    # 30s timeout + up to 3 retries with exponential backoff (built into the SDK)
+    # so a transient Qwen hiccup (429 / 5xx / network) does not crash the request.
+    return OpenAI(api_key=API_KEY, base_url=BASE_URL, timeout=30.0, max_retries=3)
 
 
 def chat(messages: list[dict], model: str | None = None, temperature: float = 0.0) -> str:
