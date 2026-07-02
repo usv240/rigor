@@ -50,10 +50,18 @@ def audit_text(text: str) -> AuditReport:
 
     for s in stats:
         try:
+            rp = float(s["reported_p"])
+        except (TypeError, ValueError, KeyError):
+            report.skipped += 1
+            continue
+        if not (0 < rp <= 1):  # a p-value must be in (0, 1]; skip garbage extractions
+            report.skipped += 1
+            continue
+        try:
             r = check_pvalue(
                 s["test"],
                 float(s["statistic"]),
-                float(s["reported_p"]),
+                rp,
                 df1=s.get("df1"),
                 df2=s.get("df2"),
                 n=s.get("n"),
@@ -142,6 +150,16 @@ def audit_text(text: str) -> AuditReport:
                 fix=fix,
             )
         )
+
+    # De-duplicate identical findings (e.g. one sentence reporting several identical stats).
+    seen, unique = set(), []
+    for f in report.findings:
+        key = (f.kind, f.claim, f.reported, f.recomputed, f.detail)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique.append(f)
+    report.findings = unique
 
     return report
 

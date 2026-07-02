@@ -23,17 +23,24 @@ fences):
      correlation r the number in parentheses IS the df (df = n - 2), so put it here
    - "df2": the SECOND df for F; else null
    - "n": sample size if explicitly stated; else null (for r, prefer df1, not n)
-   - "reported_p": the numeric p-value as reported (e.g. 0.001 for "p < .001")
+   - "reported_p": the numeric p-value as printed. For "p < .001" use 0.001 with
+     comparator "<". It must be a number strictly between 0 and 1; never 0 or negative.
    - "comparator": "=", "<", or ">" as printed with the p-value
    - "claim": the exact sentence in which THIS statistic is reported (the sentence
      that contains it), NOT a later summary, abstract, or conclusion sentence
 
-2. "means": every reported mean of integer-scale responses where a sample size is
-   available (for the GRIM check). For each:
+2. "means": ONLY include a reported mean when the underlying responses are WHOLE
+   NUMBERS on a bounded rating scale (e.g. a 1-5 or 1-7 Likert scale) or are simple
+   counts. The GRIM check only applies to integer responses. DO NOT include means
+   of physical measurements, times, distances, weights, currency, temperatures,
+   percentages, or any continuous quantity (e.g. "6.07 micrometres" or "3.4 seconds").
+   If you are not certain the responses are whole numbers on a small scale, OMIT it.
+   For each included mean:
    - "value": the reported mean
    - "n": the sample size the mean is based on
    - "n_items": number of items averaged (default 1 if unclear)
    - "decimals": number of decimal places the mean was reported to
+   - "scale": the integer scale or count it comes from (e.g. "1-7 Likert"); required
    - "context": the snippet it came from
 
 3. "sample_size": the overall number of participants/observations in the study, as
