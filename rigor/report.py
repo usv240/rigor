@@ -18,12 +18,14 @@ class Severity(str, Enum):
 
 @dataclass
 class Finding:
-    kind: str            # "pvalue" | "grim"
+    kind: str            # "pvalue" | "grim" | "sample" | "claim"
     severity: Severity
     claim: str
     detail: str
     reported: str
     recomputed: str
+    plain: str = ""      # what it means, in plain language
+    fix: str = ""        # what to do about it
 
     def to_dict(self) -> dict:
         d = self.__dict__.copy()

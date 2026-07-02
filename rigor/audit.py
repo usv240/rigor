@@ -16,6 +16,7 @@ import sys
 
 from rigor.checks import check_df_vs_n, check_pvalue, grim
 from rigor.claims import analyze_claims
+from rigor.explain import explain_claim, explain_dfn, explain_grim, explain_pvalue
 from rigor.extract import extract
 from rigor.ingest import load_text
 from rigor.report import AuditReport, Finding, Severity
@@ -66,6 +67,7 @@ def audit_text(text: str) -> AuditReport:
             else Severity.ERROR if r.decision_error
             else Severity.WARNING
         )
+        plain, fix = explain_pvalue(r)
         report.findings.append(
             Finding(
                 kind="pvalue",
@@ -74,6 +76,8 @@ def audit_text(text: str) -> AuditReport:
                 detail=r.message,
                 reported=f"p {r.comparator} {r.reported_p:g}",
                 recomputed=f"p = {r.computed_p:.4g}",
+                plain=plain,
+                fix=fix,
             )
         )
 
@@ -83,6 +87,7 @@ def audit_text(text: str) -> AuditReport:
         except Exception:  # noqa: BLE001
             report.skipped += 1
             continue
+        plain, fix = explain_grim(g)
         report.findings.append(
             Finding(
                 kind="grim",
@@ -91,6 +96,8 @@ def audit_text(text: str) -> AuditReport:
                 detail=g.message,
                 reported=f"M = {m['value']:g}, N = {m['n']}",
                 recomputed="achievable" if g.possible else f"nearest {g.nearest_possible}",
+                plain=plain,
+                fix=fix,
             )
         )
 
@@ -99,6 +106,7 @@ def audit_text(text: str) -> AuditReport:
         for s in stats:
             dfn = check_df_vs_n(str(s.get("test", "")), s.get("df1"), stated_n)
             if dfn is not None and not dfn.consistent:
+                plain, fix = explain_dfn(dfn)
                 report.findings.append(
                     Finding(
                         kind="sample",
@@ -107,6 +115,8 @@ def audit_text(text: str) -> AuditReport:
                         detail=dfn.message,
                         reported=f"df = {s.get('df1')}, stated N = {stated_n}",
                         recomputed=f"needs N >= {dfn.implied_min_n}",
+                        plain=plain,
+                        fix=fix,
                     )
                 )
 
@@ -118,14 +128,18 @@ def audit_text(text: str) -> AuditReport:
     for c in analyze_claims(text, verified):
         grounded = bool(c.get("grounded"))
         issue = str(c.get("issue", "OVERCLAIM"))
+        explanation = (c.get("explanation") or "").strip()
+        plain, fix = explain_claim(issue, explanation)
         report.findings.append(
             Finding(
                 kind="claim",
                 severity=Severity.ERROR if grounded else Severity.WARNING,
                 claim=(c.get("claim") or "").strip(),
-                detail=(c.get("explanation") or "").strip(),
+                detail=explanation,
                 reported=f"claim: {issue.lower()}",
                 recomputed="contradicts a verified result" if grounded else "AI-flagged - needs review",
+                plain=plain,
+                fix=fix,
             )
         )
 

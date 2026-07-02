@@ -62,8 +62,9 @@ function card(f, i) {
       <span class="badge" style="background:${s.color}">${s.label}</span>
       <span class="claimline">${esc(f.claim) || "<span class='muted'>(statistic)</span>"}</span>
     </div>
+    ${f.plain ? `<div class="plain">${esc(f.plain)}</div>` : ""}
     <div class="nums">reported <b>${esc(f.reported)}</b> → recomputed <b>${esc(f.recomputed)}</b></div>
-    <div class="detail">${esc(f.detail)}</div>
+    ${f.fix ? `<div class="fix"><b>What to do:</b> ${esc(f.fix)}</div>` : ""}
   </div>`;
 }
 
