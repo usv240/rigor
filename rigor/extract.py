@@ -25,7 +25,8 @@ fences):
    - "n": sample size if explicitly stated; else null (for r, prefer df1, not n)
    - "reported_p": the numeric p-value as reported (e.g. 0.001 for "p < .001")
    - "comparator": "=", "<", or ">" as printed with the p-value
-   - "claim": the sentence/claim this statistic is used to support
+   - "claim": the exact sentence in which THIS statistic is reported (the sentence
+     that contains it), NOT a later summary, abstract, or conclusion sentence
 
 2. "means": every reported mean of integer-scale responses where a sample size is
    available (for the GRIM check). For each:
