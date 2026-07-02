@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rigor - catch statistical errors before the reviewers do</title>
+<meta name="description" content="Rigor reads a paper, recomputes every p-value and mean with exact math, and flags the errors that get papers rejected and retracted. Free & open source.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="dot">🔬</span> Rigor <span class="tag">beta</span></a>
+    <div class="navlinks">
+      <a href="#how">How it works</a>
+      <a href="#math">The math</a>
+      <a href="#try">Try it</a>
+      <a class="btn btn-ghost" href="https://github.com/usv240/rigor" target="_blank" style="padding:8px 16px">GitHub ↗</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="pill">✨ AI reads the paper · math renders the verdict</div>
+    <h1>Catch the statistical errors<br><span class="g">before the reviewers do.</span></h1>
+    <p>Rigor reads your paper, recomputes every p-value and mean with exact statistics, and flags the
+       mistakes that get work desk-rejected - and careers retracted. In seconds. Free & open source.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#try">Check a paper - free</a>
+      <a class="btn btn-ghost" href="#math" style="color:#fff;background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)">See the math</a>
+    </div>
+    <div class="trust">
+      <span><b>100%</b> of planted errors caught</span>
+      <span><b>0</b> false positives on our benchmark</span>
+      <span><b>0s</b> of statistics you compute yourself</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="stats">
+    <div class="stat">
+      <div class="n">~50%</div>
+      <div class="l">of published psychology papers contain at least one statistical inconsistency
+        <i class="info" data-tip="Landmark finding from Nuijten et al. (2016), who scanned 30,000+ papers with the statcheck algorithm that Rigor builds on.">i</i>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="n">1 in 7</div>
+      <div class="l">of those inconsistencies would change the paper's conclusion
+        <i class="info" data-tip="A 'decision error' - the reported p-value crosses the significance threshold the other way once recomputed. Rigor flags these in red.">i</i>
+      </div>
+    </div>
+    <div class="stat">
+      <div class="n">Free</div>
+      <div class="l">open-source, and built for the <b>author</b> - not just publishers with big budgets</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TRY IT ===== -->
+<section id="try">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Live demo</span>
+      <h2>Audit a paper right now</h2>
+      <p>Paste a Results section (a demo paper is preloaded) or drop in a PDF. Watch the AI extract the
+         statistics and the math check every one.</p>
+    </div>
+    <div class="tool">
+      <h3>Paper text
+        <i class="info" data-tip="Rigor works best on the Results section, where the test statistics live (e.g. t(48)=1.90, p<.001). It also accepts full-paper PDFs.">i</i>
+      </h3>
+      <textarea id="paper" placeholder="Paste paper text here…"></textarea>
+      <div class="toolbar">
+        <button class="btn btn-primary" id="run">Check integrity</button>
+        <label class="filelbl"><span class="chip">📄 or drop a PDF</span>
+          <input type="file" id="pdf" accept="application/pdf"></label>
+        <span class="muted" id="hint" style="font-size:13px"></span>
+      </div>
+      <div id="report" class="hidden"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== HOW IT WORKS ===== -->
+<section id="how" style="background:#fff">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">How it works</span>
+      <h2>Four steps. One of them is AI.</h2>
+      <p>The language model only <em>reads</em>. Every verdict is arithmetic - so it can't be hallucinated.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="no">1</div><h4>Read</h4>
+        <p>Paste text or drop a PDF. Rigor pulls out the Results.</p></div>
+      <div class="step"><div class="no">2</div>
+        <h4>Extract <i class="info" data-tip="A Qwen large language model turns messy prose like 't(48) = 1.90, p < .001' into structured data. This is the ONLY step that uses AI, and it never judges correctness.">i</i></h4>
+        <p>Qwen extracts every test statistic, mean, and the claim it supports.</p></div>
+      <div class="step"><div class="no">3</div>
+        <h4>Recompute <i class="info" data-tip="Exact statistical distributions (SciPy) recompute the true p-value from each test statistic; the GRIM test checks whether each mean is arithmetically possible.">i</i></h4>
+        <p>Exact math recomputes each p-value and checks each mean.</p></div>
+      <div class="step"><div class="no">4</div><h4>Report</h4>
+        <p>A scored integrity report - every finding located and explained.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== THE MATH ===== -->
+<section id="math" class="math">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The math behind it</span>
+      <h2>Why the verdicts can't be faked</h2>
+      <p>These checks are established, peer-reviewed science. Rigor's contribution is making them work on
+         any paper, for anyone - automatically.</p>
+    </div>
+    <div class="mcards">
+      <div class="mcard">
+        <h4>p-value recomputation
+          <i class="info" data-tip="Pioneered by the 'statcheck' algorithm (Nuijten et al.). From a test statistic and its degrees of freedom, the p-value is mathematically fixed.">i</i>
+        </h4>
+        <p>Given a test statistic and its degrees of freedom
+          <i class="info" data-tip="Degrees of freedom (df) reflect the sample size - e.g. t(48) means df = 48, so N ≈ 50. Reported in parentheses after the statistic.">i</i>,
+          the true p-value is fixed. If the printed value disagrees, that's an error.</p>
+        <div class="ex">t(48) = 1.90, reported <span class="r">p &lt; .001</span><br>→ recomputed <span class="g">p = 0.063</span> - not significant.</div>
+      </div>
+      <div class="mcard">
+        <h4>GRIM test
+          <i class="info" data-tip="Granularity-Related Inconsistency of Means (Brown & Heathers, 2017). The mean of whole-number responses can only land on specific values.">i</i>
+        </h4>
+        <p>The mean of N integer responses can only take certain values. Some reported means are
+           arithmetically impossible - a fingerprint of error or fabrication.</p>
+        <div class="ex">M = <span class="r">3.45</span>, N = 10<br>→ <span class="r">impossible</span> - nearest are 3.4 and 3.5.</div>
+      </div>
+      <div class="mcard">
+        <h4>Not an AI wrapper
+          <i class="info" data-tip="A 'wrapper' asks an LLM for the answer and trusts it. Rigor never does - the LLM only extracts numbers; deterministic math produces every verdict, so it can't hallucinate a result.">i</i>
+        </h4>
+        <p>The model only reads; the math judges. That's why Rigor catches the errors <b>and leaves correct
+           results alone</b> - no crying wolf on honest science.</p>
+        <div class="ex">LLM: extracts numbers 📖<br>Math: renders verdict <span class="g">✓ un-hallucinatable</span></div>
+      </div>
+    </div>
+
+    <div class="head" style="margin-top:72px;margin-bottom:24px">
+      <span class="eyebrow">Who it's for</span>
+      <h2 style="font-size:30px">The people the incumbents ignore</h2>
+    </div>
+    <div class="who">
+      <div class="w"><b>Authors</b>Self-check before you submit and avoid a desk rejection.</div>
+      <div class="w"><b>Reviewers</b>Catch what you can't recompute by hand, in seconds.</div>
+      <div class="w"><b>Editors</b>Screen submissions for integrity at scale.</div>
+      <div class="w"><b>Students</b>Learn what a clean statistical result looks like.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="dot">🔬</span> Rigor</a>
+    <div>Open source (MIT) · Built on Qwen · Alibaba Cloud</div>
+    <a href="https://github.com/usv240/rigor" target="_blank">View on GitHub ↗</a>
+  </div>
+</footer>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

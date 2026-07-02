@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Secrets / local config
+.env
+*.local
+
+# Audio samples (can be large; keep the README)
+eval/samples/*.wav
+eval/samples/*.mp3
+eval/samples/*.flac
+!eval/samples/README.md
+
+# Generated / cache
+*.log
+.cache/
+outputs/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local hackathon rules dump (personal, not part of the product)
+Rules.md
