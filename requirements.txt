@@ -10,6 +10,9 @@ scipy>=1.11
 # PDF ingest
 pymupdf>=1.24
 
-# Web API / demo (later)
+# Web API / demo
 fastapi>=0.110
 uvicorn[standard]>=0.29
+
+# MCP server (expose the checks as tools any agent can call)
+mcp>=1.2

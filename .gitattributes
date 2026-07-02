@@ -1,0 +1,5 @@
+# Normalize line endings so GitHub detects the license and diffs stay clean.
+* text=auto
+LICENSE text eol=lf
+*.py text eol=lf
+*.md text eol=lf

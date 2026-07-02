@@ -54,6 +54,24 @@ python -m rigor.benchmark
 uvicorn web.app:app --port 8000   # then open http://localhost:8000
 ```
 
+## Use Rigor from any AI agent (MCP)
+
+Rigor ships an [MCP](https://modelcontextprotocol.io) server that exposes its
+checks as tools, so any MCP client (Claude Desktop, an agent framework, another
+Qwen agent) can fact-check statistics through Rigor and get a deterministic,
+un-hallucinatable verdict.
+
+```bash
+python -m rigor.mcp_server        # stdio transport
+```
+
+Tools: `recompute_pvalue`, `grim_test`, `df_vs_n`, `audit_paper`. Example client
+config (Claude Desktop):
+
+```json
+{ "mcpServers": { "rigor": { "command": "python", "args": ["-m", "rigor.mcp_server"] } } }
+```
+
 ## Architecture
 
 ```
