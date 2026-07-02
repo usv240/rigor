@@ -196,6 +196,18 @@ footer .brand{color:#fff}
 .limits li{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:14px 16px;margin:10px 0;font-size:14.5px}
 .limits li b{color:var(--text)}
 
+/* ---- comparison table ---- */
+.cmp{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);
+  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+.cmp th,.cmp td{padding:12px 14px;text-align:center;border-bottom:1px solid var(--line)}
+.cmp th{background:#fafbff;font-weight:700}
+.cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:500}
+.cmp .rigor{background:#f2f5ff}
+.cmp th.rigor{color:var(--accent);font-weight:800}
+.cmp .yes{color:var(--ok);font-weight:700}
+.cmp .no{color:#b9bfcc}
+.cmp tr:last-child td{border-bottom:0}
+
 @media(max-width:820px){
   .hero h1{font-size:38px}
   .stats,.steps,.mcards,.who,.grid2,.grid3{grid-template-columns:1fr}

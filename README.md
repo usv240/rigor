@@ -35,6 +35,23 @@ Benchmark: **100% detection, 0% false positives** on a balanced 12-case set
 (`python -m rigor.benchmark`). This is a proof-of-concept set, not a corpus;
 scaling it to real papers is ongoing work.
 
+## How it compares
+
+The individual checks exist; doing all of them, on any paper, in plain language,
+for the author is what is new.
+
+| | Rigor | statcheck | Clear Skies / Wiley |
+|---|:--:|:--:|:--:|
+| Recompute p-values | yes | APA only | no |
+| Impossible means (GRIM) | yes | no | no |
+| df vs N cross-check | yes | no | no |
+| Claim vs evidence (spin) | yes | no | no |
+| Reads any prose / PDF | yes | rigid format | yes |
+| Plain-language findings + fixes | yes | no | no |
+| For the author, pre-submission | yes | yes | publisher, post-hoc |
+| Callable by any agent (MCP) | yes | no | no |
+| Free and open source | yes | yes | paid, closed |
+
 ## Quickstart
 
 ```bash
