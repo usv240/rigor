@@ -31,7 +31,7 @@ catches the errors *and leaves correct results alone*.
 | **df vs N** | degrees of freedom that need more subjects than the study reports | pure arithmetic |
 | **claim vs evidence** | conclusions that overstate the result (e.g. "significant" for a p that recomputed to n.s.) | grounded in the verified results |
 
-Benchmark: **100% detection, 0% false positives** on a balanced 12-case set
+Benchmark: **100% detection, 0% false positives** on a balanced 32-case set
 (`python -m rigor.benchmark`). This is a proof-of-concept set, not a corpus;
 scaling it to real papers is ongoing work.
 

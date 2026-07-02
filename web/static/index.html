@@ -300,7 +300,8 @@
       <details><summary>How accurate is it?</summary>
         <p>The deterministic checks are exact by construction. The only variable is extraction, so we
            benchmark the whole pipeline end to end: 100% detection and 0% false positives on a balanced
-           12-case set. That is a proof of concept, not a corpus, and scaling it is ongoing.</p></details>
+           32-case set spanning t, F, chi-square, r and z tests, GRIM and df-vs-N. A solid
+           proof of concept, though not yet a large real-paper corpus; scaling it is ongoing.</p></details>
       <details><summary>Is it free?</summary>
         <p>Yes. Rigor is free and open source under the MIT license.
            <a href="https://github.com/usv240/rigor" target="_blank" style="color:var(--accent)">See the code</a>.</p></details>
@@ -323,7 +324,7 @@
         can be over-flagged; we deliberately only flag the impossible direction to limit this.</li>
       <li><b>Claim-vs-evidence has two tiers.</b> "Error" flags contradict a math-verified result and are
         provable. "Review" flags (causal or over-general language) are AI-assisted and need your judgment.</li>
-      <li><b>The benchmark is small.</b> 12 curated cases demonstrate the pipeline; a large real-paper
+      <li><b>The benchmark is a proof of concept.</b> 32 curated cases demonstrate the pipeline; a large real-paper
         evaluation is future work, and we say so rather than overclaim.</li>
     </ul>
   </div>

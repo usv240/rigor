@@ -29,6 +29,28 @@ CASES: list[tuple[str, bool, str]] = [
     ("The association held, chi2(2) = 9.50, p = .009.", False, "chi2 consistent"),
     ("Using a normal approximation, z = 2.33, p = .02.", False, "z consistent"),
     ("Average score was M = 3.40 on the 1-5 scale (N = 10).", False, "GRIM possible"),
+    # --- more errors ---
+    ("A chi-square test was highly significant, chi2(3) = 6.0, p < .001.", True, "chi2 decision error (~.11)"),
+    ("The effect was not significant, F(1, 40) = 9.0, p = .40.", True, "F decision error (~.005)"),
+    ("There was no difference, t(15) = 3.5, p = .50.", True, "t decision error (~.003)"),
+    ("Using a z-test, the result was significant, z = 0.8, p = .005.", True, "z decision error (~.42)"),
+    ("Participants rated it M = 2.63 on a 1-5 scale (N = 6).", True, "GRIM impossible"),
+    ("The average across the nine raters was M = 3.15 on a 1-5 scale (N = 9).", True, "GRIM impossible"),
+    ("The correlation was significant, r(48) = .15, p = .01.", True, "r decision error (~.30)"),
+    ("In our sample of 20 participants, the difference was reliable, t(40) = 2.5, p = .017.", True, "df-vs-N impossible"),
+    ("A significant association emerged, chi2(1) = 1.0, p = .02.", True, "chi2 decision error (~.32)"),
+    ("The groups differed, t(10) = 0.5, p = .03.", True, "t decision error (~.63)"),
+    # --- more clean ---
+    ("The test was significant, chi2(2) = 9.2, p = .010.", False, "chi2 consistent"),
+    ("A significant effect, F(3, 60) = 6.0, p = .001.", False, "F consistent"),
+    ("The difference was significant, t(100) = 2.0, p = .048.", False, "t consistent"),
+    ("Attitudes correlated with behaviour, r(20) = .50, p = .018.", False, "r consistent"),
+    ("Using a normal approximation, z = 2.58, p = .01.", False, "z consistent"),
+    ("Mean rating was M = 2.50 on the 1-5 scale (N = 6).", False, "GRIM possible"),
+    ("The effect held, t(60) = 2.66, p = .010.", False, "t consistent"),
+    ("A reliable correlation, r(98) = .25, p = .012.", False, "r consistent"),
+    ("The ANOVA was significant, F(2, 90) = 8.0, p < .001.", False, "F consistent"),
+    ("A significant result, t(40) = 2.7, p = .010.", False, "t consistent"),
 ]
 
 
