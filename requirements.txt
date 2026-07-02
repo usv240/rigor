@@ -13,6 +13,7 @@ pymupdf>=1.24
 # Web API / demo
 fastapi>=0.110
 uvicorn[standard]>=0.29
+slowapi>=0.1.9
 
 # MCP server (expose the checks as tools any agent can call)
 mcp>=1.2
