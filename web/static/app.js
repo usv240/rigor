@@ -15,6 +15,12 @@ const KIND_LABEL = {
   grim:   "GRIM (impossible means)",
   claim:  "claim vs evidence",
 };
+const KIND_TIP = {
+  pvalue: "A p-value measures how likely a result is just chance. Below .05 is usually called 'significant'. Rigor recomputes it from the reported numbers to check it is right.",
+  sample: "Degrees of freedom (df) depend on how many participants a test used. Rigor checks the df is even possible for the study's reported sample size (N).",
+  grim:   "For whole-number ratings, an average can only land on certain values. GRIM checks whether a reported mean is arithmetically possible.",
+  claim:  "Rigor checks whether the paper's words match its numbers, for example calling a result 'significant' when the math says it is not.",
+};
 const SORT = { ERROR: 0, WARNING: 1, OK: 2 };
 
 fetch("/api/sample").then(r => r.json()).then(d => { paper.value = d.text; }).catch(() => {});
@@ -86,6 +92,7 @@ function render(r) {
     const errs = items.filter(f => f.severity === "ERROR").length;
     sections += `<div class="fsection">
       <div class="fshead">${KIND_LABEL[k] || k}
+        <i class="info" data-tip="${KIND_TIP[k] || ""}">i</i>
         <span class="fscount">${items.length}</span>
         ${errs ? `<span class="fscount err">${errs} error${errs !== 1 ? "s" : ""}</span>` : ""}
       </div>
@@ -97,11 +104,16 @@ function render(r) {
     <div class="scorecard">
       <div class="ring" style="--val:${r.score};--rc:${rc}"><div class="num">${r.score}<small>/100</small></div></div>
       <div class="sc-meta">
-        <h3>Integrity report</h3>
+        <h3>Integrity report
+          <i class="info" data-tip="A 0-100 summary. Lower means more, or more serious, problems were found. It is a guide to where to look, not a grade.">i</i>
+        </h3>
         <div class="row">
-          <span><span class="dotc" style="background:#ef4444"></span><b>${r.errors}</b> error${r.errors !== 1 ? "s" : ""}</span>
-          <span><span class="dotc" style="background:#f59e0b"></span><b>${r.warnings}</b> to review</span>
-          <span><span class="dotc" style="background:#16a34a"></span><b>${okCount}</b> clean</span>
+          <span><span class="dotc" style="background:#ef4444"></span><b>${r.errors}</b> error${r.errors !== 1 ? "s" : ""}
+            <i class="info" data-tip="Provably wrong by exact math. High confidence: the reported number contradicts what it must be.">i</i></span>
+          <span><span class="dotc" style="background:#f59e0b"></span><b>${r.warnings}</b> to review
+            <i class="info" data-tip="An AI-flagged judgment call, like causal or over-general wording. Not a proof: use your own judgment.">i</i></span>
+          <span><span class="dotc" style="background:#16a34a"></span><b>${okCount}</b> clean
+            <i class="info" data-tip="Checked and found consistent. No problem here.">i</i></span>
           <span class="muted">· ${r.n_tests} test(s), ${r.n_means} mean(s) · ${esc(r.source || "")}</span>
         </div>
       </div>
