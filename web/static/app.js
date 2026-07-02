@@ -23,6 +23,9 @@ const KIND_TIP = {
 };
 const SORT = { ERROR: 0, WARNING: 1, OK: 2 };
 
+let dismissed = new Set();  // finding ids the human reviewer has dismissed
+let lastR = null;
+
 fetch("/api/sample").then(r => r.json()).then(d => { paper.value = d.text; }).catch(() => {});
 pdfInput.addEventListener("change", () => {
   hint.textContent = pdfInput.files[0] ? `📄 ${pdfInput.files[0].name}` : "";
@@ -62,11 +65,12 @@ function setLoading(on) {
 
 function card(f, i) {
   const s = SEV[f.severity];
-  return `<div class="finding sev-${f.severity}" data-sev="${f.severity}"
+  return `<div class="finding sev-${f.severity}" data-sev="${f.severity}" data-id="${f._id}"
       style="border-left-color:${s.color};animation-delay:${i * 35}ms">
     <div class="frow">
       <span class="badge" style="background:${s.color}">${s.label}</span>
       <span class="claimline">${esc(f.claim) || "<span class='muted'>(statistic)</span>"}</span>
+      <button class="dismiss" data-id="${f._id}">Dismiss</button>
     </div>
     ${f.plain ? `<div class="plain">${esc(f.plain)}</div>` : ""}
     <div class="nums">reported <b>${esc(f.reported)}</b> → recomputed <b>${esc(f.recomputed)}</b></div>
@@ -75,6 +79,9 @@ function card(f, i) {
 }
 
 function render(r) {
+  lastR = r;
+  dismissed = new Set();
+  r.findings.forEach((f, i) => { f._id = i; });
   const rc = r.score >= 80 ? "#16a34a" : r.score >= 50 ? "#f59e0b" : "#ef4444";
   const okCount = r.findings.filter(f => f.severity === "OK").length;
 
@@ -125,6 +132,10 @@ function render(r) {
       <button class="chip" data-f="OK">Clean ${okCount}</button>
       <button class="dlbtn" id="dlbtn">&#8595; Download report (.md)</button>
     </div>
+    ${r.findings.length ? `<div class="reviewbar">
+      <span>&#128100; Human review: dismiss any false positive, then export your finalized report.</span>
+      <span class="kept" id="keptcount">${r.findings.length} kept</span>
+    </div>` : ""}
     <div class="findings">${sections || '<div class="empty">No statistics found to check.</div>'}</div>`;
 
   report.classList.remove("hidden");
@@ -135,23 +146,34 @@ function render(r) {
   }));
   const dl = report.querySelector("#dlbtn");
   if (dl) dl.addEventListener("click", () => downloadReport(r));
+  report.querySelectorAll(".dismiss").forEach(btn => btn.addEventListener("click", () => {
+    const el = btn.closest(".finding");
+    const id = Number(btn.dataset.id);
+    if (dismissed.has(id)) { dismissed.delete(id); el.classList.remove("dismissed"); btn.textContent = "Dismiss"; }
+    else { dismissed.add(id); el.classList.add("dismissed"); btn.textContent = "Undo"; }
+    const kept = report.querySelector("#keptcount");
+    if (kept) kept.textContent = `${lastR.findings.length - dismissed.size} kept`;
+  }));
   report.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function downloadReport(r) {
-  const okCount = r.findings.filter(f => f.severity === "OK").length;
+  const findings = r.findings.filter(f => !dismissed.has(f._id));  // reviewer-approved only
+  const c = { ERROR: 0, WARNING: 0, OK: 0 };
+  findings.forEach(f => c[f.severity]++);
   const L = [
     "# Rigor integrity report",
     "",
     `- Source: ${r.source || "pasted text"}`,
     `- Integrity score: ${r.score}/100`,
-    `- ${r.errors} error(s), ${r.warnings} to review, ${okCount} clean`,
+    `- ${c.ERROR} error(s), ${c.WARNING} to review, ${c.OK} clean`
+      + (dismissed.size ? ` (${dismissed.size} dismissed by reviewer)` : ""),
     `- Checked: ${r.n_tests} test(s), ${r.n_means} mean(s)`,
     "",
   ];
   const groups = { ERROR: "Errors", WARNING: "To review", OK: "Clean" };
   for (const sev of ["ERROR", "WARNING", "OK"]) {
-    const items = r.findings.filter(f => f.severity === sev);
+    const items = findings.filter(f => f.severity === sev);
     if (!items.length) continue;
     L.push(`## ${groups[sev]} (${items.length})`, "");
     for (const f of items) {
