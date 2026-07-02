@@ -50,6 +50,9 @@ python -m rigor.audit
 # the accuracy benchmark:
 python -m rigor.benchmark
 
+# the unit tests (deterministic checks, no API key):
+python -m pytest tests/ -q
+
 # the web app:
 uvicorn web.app:app --port 8000   # then open http://localhost:8000
 ```
