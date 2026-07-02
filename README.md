@@ -74,6 +74,25 @@ config (Claude Desktop):
 
 ## Architecture
 
+```mermaid
+flowchart TD
+    U["Researcher / reviewer (browser)"] --> FE["Frontend: landing + live tool"]
+    AG["Any MCP agent (Claude Desktop, etc.)"] --> MCP["MCP server (rigor/mcp_server.py)"]
+    FE --> API["FastAPI backend (web/app.py)"]
+
+    API --> ING["ingest: text / PDF"]
+    MCP --> ING
+    ING --> EX["extract statistics (Qwen LLM)"]
+    EX --> CK["deterministic checks: statcheck, GRIM, df-vs-N"]
+    CK --> CM["claim vs evidence: grounded spin detection"]
+    CM --> RP["scored, plain-language report"]
+    RP --> API
+
+    EX -->|DashScope API| Q["Qwen models (Alibaba Model Studio)"]
+    CM -->|DashScope API| Q
+    API -.runs on.-> ECS["Alibaba Cloud ECS (Singapore)"]
+```
+
 ```
 paper text / PDF
   -> ingest        (rigor/ingest.py)      text, PDF via PyMuPDF
