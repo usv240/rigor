@@ -207,10 +207,12 @@ footer .brand{color:#fff}
 .cmp .yes{color:var(--ok);font-weight:700}
 .cmp .no{color:#b9bfcc}
 .cmp tr:last-child td{border-bottom:0}
+.cmp-wrap{overflow:visible}  /* desktop: let the info tooltips escape the table */
 
 @media(max-width:820px){
   .hero h1{font-size:38px}
   .stats,.steps,.mcards,.who,.grid2,.grid3{grid-template-columns:1fr}
   .head h2{font-size:30px}.scorecard{flex-direction:column;text-align:center}
   section{padding:60px 0}
+  .cmp-wrap{overflow-x:auto}  /* mobile: scroll the table (no hover tooltips anyway) */
 }
