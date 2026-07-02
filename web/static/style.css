@@ -198,7 +198,7 @@ footer .brand{color:#fff}
 
 /* ---- comparison table ---- */
 .cmp{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);
-  border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  border:1px solid var(--line);border-radius:var(--radius)}
 .cmp th,.cmp td{padding:12px 14px;text-align:center;border-bottom:1px solid var(--line)}
 .cmp th{background:#fafbff;font-weight:700}
 .cmp td:first-child,.cmp th:first-child{text-align:left;font-weight:500}
