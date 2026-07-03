@@ -84,9 +84,11 @@ function card(f, i) {
       <button class="dismiss" data-id="${f._id}">Dismiss</button>
     </div>
     ${f.plain ? `<div class="plain">${esc(f.plain)}</div>` : ""}
-    <div class="nums">reported <b>${esc(f.reported)}</b> → recomputed <b>${esc(f.recomputed)}</b></div>
-    ${f.method ? `<div class="method">computed by: ${esc(f.method)}</div>` : ""}
-    ${f.fix ? `<div class="fix"><b>What to do:</b> ${esc(f.fix)}</div>` : ""}
+    <div class="fdetails">
+      <div class="frow2"><span class="flabel">Numbers</span><div class="fval">reported <b>${esc(f.reported)}</b> &rarr; recomputed <b>${esc(f.recomputed)}</b></div></div>
+      ${f.method ? `<div class="frow2"><span class="flabel">The math</span><div class="fval"><span class="fmono">${esc(f.method)}</span></div></div>` : ""}
+      ${f.fix ? `<div class="frow2"><span class="flabel">What to do</span><div class="fval">${esc(f.fix)}</div></div>` : ""}
+    </div>
   </div>`;
 }
 
