@@ -85,21 +85,25 @@ def _run_tool(name: str, a: dict) -> dict:
     return {"error": f"unknown tool {name}"}
 
 
-def audit_agent(paper_text: str, max_turns: int = 10, verbose: bool = False) -> dict:
-    """Run the agentic audit loop; returns {narrative, trace, turns}."""
+def audit_agent_stream(paper_text: str, max_turns: int = 10):
+    """Yield events AS the agent works: status, each tool call, and the final
+    narrative. This is what powers the live activity log in the web UI."""
     messages: list[dict] = [
         {"role": "system", "content": SYSTEM},
         {"role": "user", "content": paper_text},
     ]
-    trace: list[dict] = []
+    yield {"type": "status", "msg": "Reading the paper and deciding what to check..."}
     for turn in range(max_turns):
+        yield {"type": "status", "msg": f"Turn {turn + 1}: asking Qwen which checks to run..."}
         resp = client().chat.completions.create(
             model=LLM_MODEL, messages=messages, tools=TOOLS, temperature=0, seed=SEED)
         msg = resp.choices[0].message
 
         if not msg.tool_calls:
             messages.append({"role": "assistant", "content": msg.content or ""})
-            return {"narrative": msg.content or "", "trace": trace, "turns": turn + 1}
+            yield {"type": "narrative", "text": msg.content or ""}
+            yield {"type": "done", "turns": turn + 1}
+            return
 
         messages.append({
             "role": "assistant", "content": msg.content or "",
@@ -112,13 +116,27 @@ def audit_agent(paper_text: str, max_turns: int = 10, verbose: bool = False) -> 
                 args = json.loads(tc.function.arguments)
                 result = _run_tool(tc.function.name, args)
             except Exception as exc:  # noqa: BLE001
-                result = {"error": str(exc)}
-            trace.append({"tool": tc.function.name, "args": args if "args" in dir() else {}, "result": result})
-            if verbose:
-                print(f"  [tool] {tc.function.name}({tc.function.arguments}) -> {result.get('verdict', result)}")
+                args, result = {}, {"error": str(exc)}
+            yield {"type": "tool", "tool": tc.function.name, "args": args, "result": result}
             messages.append({"role": "tool", "tool_call_id": tc.id, "content": json.dumps(result)})
 
-    return {"narrative": "(agent reached the turn limit)", "trace": trace, "turns": max_turns}
+    yield {"type": "narrative", "text": "(agent reached the turn limit)"}
+    yield {"type": "done", "turns": max_turns}
+
+
+def audit_agent(paper_text: str, max_turns: int = 10, verbose: bool = False) -> dict:
+    """Non-streaming wrapper (CLI + /api/agent): collects the stream into a result."""
+    narrative, trace, turns = "", [], 0
+    for ev in audit_agent_stream(paper_text, max_turns):
+        if ev["type"] == "tool":
+            trace.append(ev)
+            if verbose:
+                print(f"  [tool] {ev['tool']}({ev['args']}) -> {ev['result'].get('verdict', ev['result'])}")
+        elif ev["type"] == "narrative":
+            narrative = ev["text"]
+        elif ev["type"] == "done":
+            turns = ev["turns"]
+    return {"narrative": narrative, "trace": trace, "turns": turns}
 
 
 def main(argv: list[str]) -> int:

@@ -186,14 +186,29 @@ function recomputeScore() {
   if (rev) rev.style.display = dismissed.size ? "" : "none";
 }
 
+function appendLog(el, html) {
+  const d = document.createElement("div");
+  d.className = "aline";
+  d.innerHTML = html;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+
 async function runAgent(text) {
   const box = report.querySelector("#agentbox");
   const btn = report.querySelector("#agentbtn");
   btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span> Agent reasoning…`;
-  box.innerHTML = "";
+  btn.innerHTML = `<span class="spinner"></span> Agent working…`;
+  box.innerHTML = `<div class="agentcard">
+    <div class="ahead">&#129302; Agent activity <span class="muted">&mdash; live Qwen tool-calling loop</span></div>
+    <div class="alog" id="alog"></div>
+    <div class="anarr" id="anarr"></div>
+  </div>`;
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  const log = box.querySelector("#alog");
+  const narr = box.querySelector("#anarr");
   try {
-    const res = await fetch("/api/agent", {
+    const res = await fetch("/api/agent/stream", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text }),
     });
@@ -202,19 +217,34 @@ async function runAgent(text) {
       try { const e = await res.json(); if (e.error) m = e.error; } catch (_) {}
       throw new Error(m);
     }
-    const d = await res.json();
-    const trace = (d.trace || []).map(t => {
-      const v = (t.result && t.result.verdict) || JSON.stringify(t.result);
-      return `<div class="atrace"><b>${esc(t.tool)}</b>(${esc(JSON.stringify(t.args))}) &rarr; ${esc(v)}</div>`;
-    }).join("");
-    box.innerHTML = `<div class="agentcard">
-      <div class="ahead">&#129302; Agent reasoning <span class="muted">&mdash; ${d.turns} turns, ${(d.trace || []).length} tool calls made by the model</span></div>
-      ${trace ? `<div class="atrace-wrap">${trace}</div>` : ""}
-      <div class="anarr">${esc(d.narrative || "").replace(/\n/g, "<br>")}</div>
-    </div>`;
-    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf("\n\n")) >= 0) {
+        const line = buf.slice(0, i); buf = buf.slice(i + 2);
+        if (!line.startsWith("data: ")) continue;
+        const ev = JSON.parse(line.slice(6));
+        if (ev.type === "status") {
+          appendLog(log, `<span class="astatus">&#9656; ${esc(ev.msg)}</span>`);
+        } else if (ev.type === "tool") {
+          const v = (ev.result && ev.result.verdict) || JSON.stringify(ev.result);
+          const bad = /ERROR|IMPOSSIBLE|not significant|n\.s\./i.test(v);
+          appendLog(log, `<span class="acall">&#128295; <b>${esc(ev.tool)}</b>(${esc(JSON.stringify(ev.args))})</span>`
+            + `<span class="${bad ? "av-bad" : "av-ok"}"> &rarr; ${esc(v)}</span>`);
+        } else if (ev.type === "narrative") {
+          narr.innerHTML = `<div class="ndivider">Agent's verdict</div>${esc(ev.text).replace(/\n/g, "<br>")}`;
+        } else if (ev.type === "error") {
+          appendLog(log, `<span class="av-bad">&#9888; ${esc(ev.msg)}</span>`);
+        }
+      }
+    }
   } catch (e) {
-    box.innerHTML = `<div class="empty">⚠️ ${e.message}</div>`;
+    appendLog(log, `<span class="av-bad">&#9888; ${esc(e.message)}</span>`);
   } finally {
     btn.disabled = false;
     btn.innerHTML = `&#129302; Run agent analysis`;
