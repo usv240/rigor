@@ -39,6 +39,23 @@ general population.
 """.strip()
 
 
+def _pval_method(s: dict) -> str:
+    """A short, human-readable description of exactly how the p-value was recomputed."""
+    t = str(s.get("test", "")).lower()
+    stat, df1, df2 = s.get("statistic"), s.get("df1"), s.get("df2")
+    if t == "t":
+        return f"two-tailed t: p = 2 x P(T > |{stat}|), df = {df1}"
+    if t == "f":
+        return f"F: p = P(F > {stat}), df = ({df1}, {df2})"
+    if t in ("chi2", "chisq", "x2"):
+        return f"chi-square: p = P(X^2 > {stat}), df = {df1}"
+    if t == "r":
+        return f"r to t: t = r x sqrt(df / (1 - r^2)), df = {df1}, then two-tailed t"
+    if t == "z":
+        return "two-tailed z: p = 2 x P(Z > |z|)"
+    return ""
+
+
 def audit_text(text: str) -> AuditReport:
     data = extract(text)
     stats, means = data["stats"], data["means"]
@@ -87,6 +104,7 @@ def audit_text(text: str) -> AuditReport:
                 plain=plain,
                 fix=fix,
                 weight=2.0 if r.decision_error else 0.0 if r.consistent else 0.8,
+                method=_pval_method(s),
             )
         )
 
@@ -108,6 +126,7 @@ def audit_text(text: str) -> AuditReport:
                 plain=plain,
                 fix=fix,
                 weight=0.0 if g.possible else 1.5,
+                method=f"a mean of {m['n']} whole-number responses must be an integer sum / {m['n']}",
             )
         )
 
@@ -128,6 +147,7 @@ def audit_text(text: str) -> AuditReport:
                         plain=plain,
                         fix=fix,
                         weight=1.5,
+                        method=f"{s.get('test')}(df={s.get('df1')}) requires N >= {dfn.implied_min_n} (df = N - 1 or N - 2)",
                     )
                 )
 

@@ -89,7 +89,7 @@ docker, ecs, uvicorn
 - **Live demo (Alibaba Cloud ECS):** http://47.236.166.20:8000
 - **Proof of Alibaba Cloud services/APIs (code file):** https://github.com/usv240/rigor/blob/main/rigor/llm.py
 - **Demo video:** [YouTube/Vimeo link - add after recording]
-- **Blog post (optional bonus):** [Medium/Dev.to link - add after posting]
+- **Blog post (optional bonus):** https://dev.to/ujwal240/i-built-a-spell-checker-for-the-statistics-in-research-papers-3a9m
 
 ## Proof of Alibaba Cloud deployment
 - Backend running on Alibaba Cloud ECS (Singapore); a short screen recording shows

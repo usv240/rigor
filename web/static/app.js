@@ -85,6 +85,7 @@ function card(f, i) {
     </div>
     ${f.plain ? `<div class="plain">${esc(f.plain)}</div>` : ""}
     <div class="nums">reported <b>${esc(f.reported)}</b> → recomputed <b>${esc(f.recomputed)}</b></div>
+    ${f.method ? `<div class="method">computed by: ${esc(f.method)}</div>` : ""}
     ${f.fix ? `<div class="fix"><b>What to do:</b> ${esc(f.fix)}</div>` : ""}
   </div>`;
 }

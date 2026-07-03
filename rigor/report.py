@@ -27,6 +27,7 @@ class Finding:
     plain: str = ""      # what it means, in plain language
     fix: str = ""        # what to do about it
     weight: float = 0.0  # severity weight used in scoring (e.g. decision error = 2.0)
+    method: str = ""     # the exact computation used (transparency)
 
     def to_dict(self) -> dict:
         d = self.__dict__.copy()
