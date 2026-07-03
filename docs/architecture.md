@@ -32,7 +32,7 @@ flowchart TD
 | Layer | Module | Responsibility |
 |---|---|---|
 | Frontend | `web/static/` | Landing page, live tool, filterable report, info tooltips |
-| API | `web/app.py` | FastAPI: serves the site, `/api/audit`, `/api/audit/pdf` |
+| API | `web/app.py` | FastAPI: serves the site, `/api/audit`, `/api/audit/pdf`, `/api/agent`, `/api/agent/stream` |
 | Ingest | `rigor/ingest.py` | Load text or extract PDF text (PyMuPDF) |
 | Extract | `rigor/extract.py` | Qwen LLM turns prose into structured statistics/means/claims |
 | Checks | `rigor/checks/` | Deterministic verdicts: `statcheck.py`, `grim.py`, `consistency.py` |
