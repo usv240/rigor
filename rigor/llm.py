@@ -20,6 +20,7 @@ BASE_URL = os.getenv(
     "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
 )
 LLM_MODEL = os.getenv("QWEN_LLM_MODEL", "qwen-plus")
+SEED = 7  # fixed seed + temperature 0 for reproducible extraction where supported
 
 
 def client() -> OpenAI:
@@ -35,6 +36,7 @@ def chat(messages: list[dict], model: str | None = None, temperature: float = 0.
         model=model or LLM_MODEL,
         messages=messages,
         temperature=temperature,
+        seed=SEED,
     )
     return resp.choices[0].message.content or ""
 

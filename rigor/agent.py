@@ -20,7 +20,7 @@ import sys
 
 from rigor.checks import check_df_vs_n, check_pvalue, grim
 from rigor.ingest import load_text
-from rigor.llm import LLM_MODEL, client
+from rigor.llm import LLM_MODEL, SEED, client
 
 SYSTEM = """You are Rigor, a research-integrity auditor AGENT. You are given a \
 paper's text. Work in steps:
@@ -94,7 +94,7 @@ def audit_agent(paper_text: str, max_turns: int = 10, verbose: bool = False) -> 
     trace: list[dict] = []
     for turn in range(max_turns):
         resp = client().chat.completions.create(
-            model=LLM_MODEL, messages=messages, tools=TOOLS, temperature=0)
+            model=LLM_MODEL, messages=messages, tools=TOOLS, temperature=0, seed=SEED)
         msg = resp.choices[0].message
 
         if not msg.tool_calls:

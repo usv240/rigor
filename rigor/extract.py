@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import json
 
-from rigor.llm import LLM_MODEL, client
+from rigor.llm import LLM_MODEL, SEED, client
 
 SYSTEM = """You are a meticulous extraction engine for scientific papers. Call the \
 submit_extraction function with everything you find. Rules:
@@ -103,6 +103,7 @@ def extract(paper_text: str) -> dict:
         tools=[EXTRACTION_TOOL],
         tool_choice={"type": "function", "function": {"name": "submit_extraction"}},
         temperature=0,
+        seed=SEED,
     )
     msg = resp.choices[0].message
     data: dict = {}
