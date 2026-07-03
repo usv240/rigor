@@ -114,22 +114,18 @@ config (Claude Desktop):
 
 ```mermaid
 flowchart TD
-    U["Researcher / reviewer (browser)"] --> FE["Frontend: landing + live tool"]
-    AG["Any MCP agent (Claude Desktop, etc.)"] --> MCP["MCP server (rigor/mcp_server.py)"]
-    FE --> API["FastAPI backend (web/app.py)"]
-
-    API --> ING["ingest: text / PDF"]
-    MCP --> ING
-    ING --> EX["extract statistics (Qwen LLM)"]
-    EX --> CK["deterministic checks: statcheck, GRIM, df-vs-N"]
-    CK --> CM["claim vs evidence: grounded spin detection"]
-    CM --> RP["scored, plain-language report"]
-    RP --> API
-
-    EX -->|DashScope API| Q["Qwen models (Alibaba Model Studio)"]
-    CM -->|DashScope API| Q
-    API -.runs on.-> ECS["Alibaba Cloud ECS (Singapore)"]
+    U["You paste a paper or drop a PDF"] --> API["Rigor on Alibaba Cloud (ECS)"]
+    A["Any AI agent, via MCP"] --> API
+    API --> EX["Qwen reads it and pulls out the numbers"]
+    EX --> CK["Exact math checks every number"]
+    CK --> RP["Plain-language report, with the exact calculation shown"]
+    RP --> U
+    EX -->|Qwen API| Q["Qwen on Alibaba Model Studio"]
 ```
+
+The model only reads. The math decides every verdict. That split is the whole design.
+The reasoning behind each design choice is written up as short
+[Architecture Decision Records](docs/adr/).
 
 ```
 paper text / PDF
