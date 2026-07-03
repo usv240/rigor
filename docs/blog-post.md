@@ -1,98 +1,116 @@
-# Building Rigor: a spell-checker for statistics, powered by Qwen
+# I built a spell-checker for the statistics in research papers
 
-*My journey building an AI research-integrity referee for the Global AI Hackathon with Qwen Cloud.*
+*Suggested tags for Dev.to / Medium: qwen, alibabacloud, ai, python, hackathon*
 
-## The problem that started it
+I kept running into the same uncomfortable fact. Somewhere around half of published
+psychology papers have at least one number that doesn't add up. It's usually not
+fraud. It's tired people making small mistakes. A p-value typed wrong. An average
+that can't exist for the sample size. A result called "significant" that, when you
+actually check it, isn't.
 
-About half of published psychology papers contain at least one statistical
-inconsistency, and roughly one in seven of those would flip the paper's
-conclusion. That is not fraud, mostly. It is honest human error: a mistyped
-p-value, a mean that cannot exist for the sample size, a "significant" claim that
-the numbers do not actually support.
+The strange thing is that these slip through. Reviewers read for the ideas and the
+argument, not the arithmetic. Almost nobody sits down and recomputes a p-value by
+hand. And the tools that can do it are expensive, closed, and sold to journals, so
+they only run after you've already submitted. The one person who'd benefit the most,
+the author about to hit submit, gets nothing.
 
-Here is the uncomfortable part: peer reviewers almost never catch these, because
-they read for ideas and argument, not arithmetic. Nobody sits down and recomputes
-a p-value by hand. The tools that do exist are closed, expensive, and sold to
-publishers to run after submission. The person who most needs the help, the
-author about to submit, has nothing.
+So I built Rigor. You paste your paper, or drop in a PDF, and it checks the numbers
+for you in a few seconds.
 
-So I built Rigor: paste a paper, and it recomputes every p-value and mean with
-exact math, cross-checks the sample sizes, and flags where the words overstate the
-numbers. In seconds. Free and open source.
+## What it checks
 
-## The insight: not an AI wrapper
+Four things, and they each catch a different kind of slip.
 
-The doubt I kept circling back to was: is this just an LLM with a nice UI? That
-question kills most AI projects, and it deserved an honest answer.
+It recomputes every p-value from the test statistic. If you wrote p < .001 but the
+math says p = .06, it tells you.
 
-The answer is no, and the reason is the whole design. The language model only
-*reads*. Its single job is to turn messy prose like `t(48) = 1.90, p < .001` into
-structured data. Every *verdict* is produced by deterministic math: exact
-statistical distributions and arithmetic. If the model hallucinates, the worst
-case is a missed or spurious flag on one statistic. It can never invent a wrong
-verdict, because it never produces a verdict.
+It runs the GRIM test on averages. The mean of ten whole-number answers can't be
+3.45. Small checks like that catch typos, and sometimes worse.
 
-That separation is what makes Rigor trustworthy. It catches the errors *and leaves
-correct results alone*, which a hallucinating wrapper cannot do.
+It compares the degrees of freedom to the sample size. If a test needs more people
+than the study actually collected, something is mislabeled.
 
-## Where Qwen Cloud came in
+And it reads the claims. This is the part I'm proudest of. It looks at whether the
+words match the numbers, like calling a result significant when the recomputed value
+says it isn't.
 
-I used Qwen (via Alibaba Cloud Model Studio, over the OpenAI-compatible DashScope
-endpoint) for the one thing only a strong language model can do: read arbitrary,
-free-form scientific text and extract the statistics, means, and claims as clean
-structured data. This is the step that was simply impossible before modern LLMs.
-statcheck, the tool that pioneered p-value recomputation, only works on rigidly
-formatted statistics. Qwen's extraction generalizes the whole idea to any paper,
-in any format, including full PDFs.
+Every finding comes with a plain explanation and a suggestion for what to do next,
+not just a red mark.
 
-I also used Qwen for the feature I am proudest of: claim-vs-evidence detection.
-Given the paper text and the results the math already verified, Qwen finds
-sentences whose wording overstates the evidence, and Rigor grounds the hard flags
-in the recomputed numbers so they are provable, not opinions.
+## The question I was afraid of
 
-## The four checks
+Early on I kept asking myself whether this was just ChatGPT with a nice screen on
+top. That question kills a lot of AI projects, and it deserved a real answer.
 
-1. **p-value recomputation** (statcheck-style): the true p-value is fixed by the
-   test statistic and its degrees of freedom.
-2. **GRIM**: the mean of whole-number responses can only land on certain values.
-3. **df vs N**: a test's degrees of freedom imply a minimum sample size.
-4. **claim vs evidence**: does the conclusion actually follow from the numbers?
+Here's how I made sure it wasn't. Qwen, the model, only reads. Its one job is to pull
+the numbers and claims out of messy writing. It never decides if something is right
+or wrong. Every verdict comes from plain math, exact statistics that can't be made
+up. If the model misreads something, the worst case is a flag you can dismiss. It can
+never invent a wrong answer, because it never gives an answer at all. The math does.
 
-The first two are established science. The last two go further than any tool I
-know of.
+That split, where the model reads and the math judges, is the whole idea.
 
-## The moment it got real
+## Where Qwen came in
 
-A benchmark is nice (Rigor hits 100% detection with zero false positives on a
-balanced set), but the moment I believed in it was running it on real, published,
-open-access papers. On one real psychology paper it flagged a summary sentence
-presented as an established finding, and pointed out that the underlying test was
-t(63) = 1.868, p = .066, not significant, and that the paper itself admitted the
-effect was "slightly above the threshold." A published overclaim, caught
-automatically, in seconds.
+I used Qwen through Alibaba Cloud's Model Studio. The part only a good model can do
+is read real, free-form scientific writing and pull the statistics out as clean data.
+I used Qwen's function calling for this, so instead of hoping it hands back tidy text
+I can parse, it fills in a proper structured form. It's more reliable, and honestly
+it just feels more deliberate.
 
-That run also taught me humility. An early version wrongly applied the GRIM check
-to continuous measurements in micrometres. Testing on real data forced me to make
-the extraction conservative, so it only flags what it can defend. Robustness turned
-out to matter as much as detection.
+I used Qwen again for the claim checking, and I tied it back to the results the math
+had already confirmed, so the strong flags are provable, not opinions.
 
-## Making it a capability, not just an app
+## Turning it into a real agent
 
-To go beyond a single website, I wrapped Rigor's checks in an MCP server. Now any
-AI agent can call `recompute_pvalue`, `grim_test`, `df_vs_n`, or `audit_paper` as
-tools and fact-check statistics on its own. Rigor becomes a reusable building block.
+For a while Rigor was a straight line. Extract, check, report. Useful, but that's a
+pipeline, not an agent. So I gave Qwen the checks as tools and let it run its own
+loop. Now it reads the paper, decides what to check, calls the tools itself, thinks
+about the results, and then tells you whether the problems look like one-off typos or
+something more systematic.
 
-## Deploying on Alibaba Cloud
+My favorite part is that you can watch it happen. There's a live log in the app that
+streams each step as it goes: reading, calling grim_test, calling recompute_pvalue,
+reasoning, then the verdict. Seeing it work is what made the whole thing click for
+me. It's clearly doing something, not pretending to.
 
-The backend runs on Alibaba Cloud, containerized, with Qwen doing the reading and
-exact math doing the judging. Everything is open source under the MIT license.
+## The mistake that taught me the most
 
-## What I would tell anyone building with Qwen
+I ran an early version on some real papers, feeling pretty smart, and it flagged a
+measurement of 6.07 micrometres as an impossible average. That's nonsense. GRIM only
+applies to whole-number ratings, not physical measurements. My extraction was too
+eager.
 
-Use the model for what only it can do (reading and understanding messy human text),
-and let deterministic code own anything that must be correct. That division is what
-turns "an LLM demo" into a tool people can actually trust.
+That was a good wake-up. I tightened it so it only checks what it should, added a few
+guards, and now it stays quiet when a paper is out of its depth. Being careful turned
+out to matter as much as being clever.
 
-Rigor is free and open source: https://github.com/usv240/rigor
+## Does it work on real papers?
 
-*Catch the statistical errors before the reviewers do.*
+Yes, and I have a favorite example. I ran it on a published geology paper about rock
+erosion. It flagged a correlation the authors reported "across the four rock types"
+as significant. With only four data points, that's a shaky claim. I went and read the
+paper's own methods to be sure, and yes, four rock types, four points. Rigor caught
+it on its own, and it was right to.
+
+On a small test set it catches every planted error and never flags a clean one. That
+set isn't huge yet, and I say so in the app. On long, messy real papers it can be
+noisier, which is exactly why there's a human review step. It flags, you decide, and
+you dismiss anything it got wrong before you export the report.
+
+## Running it on Alibaba Cloud
+
+The whole thing runs on Alibaba Cloud, in a container on a small server in Singapore,
+with Qwen doing the reading. It's open source, and I also wrapped the checks in an MCP
+server, so other AI agents can call them too. Rigor ended up being a small building
+block, not just a website.
+
+## What I'd pass on
+
+If you build with a model, use it for the one thing only it can do, which is making
+sense of human writing, and let ordinary code own anything that has to be correct.
+That line is what turns a demo into something people can actually trust.
+
+Rigor is free and open source. The code is at
+https://github.com/usv240/rigor, and you can try the live version, paste a paper, and
+watch it work.
