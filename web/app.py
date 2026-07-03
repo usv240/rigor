@@ -24,6 +24,7 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
+from rigor.agent import audit_agent
 from rigor.audit import SAMPLE_PAPER, audit_text
 from rigor.ingest import load_text
 
@@ -75,6 +76,18 @@ def api_audit(request: Request, body: AuditIn) -> JSONResponse:
     result["source"] = "pasted text"
     _log_audit("text", len(body.text), result, time.time() - t0)
     return JSONResponse(result)
+
+
+@app.post("/api/agent")
+@limiter.limit("6/minute")
+def api_agent(request: Request, body: AuditIn) -> JSONResponse:
+    """Run the agentic audit (Qwen tool-calling loop): returns a reasoned narrative
+    plus the trace of tool calls the agent made."""
+    try:
+        out = audit_agent(body.text)
+    except Exception as exc:  # noqa: BLE001
+        return JSONResponse(status_code=502, content={"error": f"{type(exc).__name__}: {exc}"})
+    return JSONResponse(out)
 
 
 @app.post("/api/audit/pdf")

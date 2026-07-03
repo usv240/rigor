@@ -75,6 +75,23 @@ python -m pytest tests/ -q
 uvicorn web.app:app --port 8000   # then open http://localhost:8000
 ```
 
+## Agentic audit (not a pipeline)
+
+Beyond the deterministic pipeline, Rigor ships a real **Qwen tool-calling agent**
+(`rigor/agent.py`). Instead of a fixed flow, the model runs a multi-turn loop: it
+*decides* what to check, *calls* the deterministic verification tools itself (it
+never computes a verdict), *reasons* about each result, and *synthesises* whether
+the problems are **systematic or isolated** - then writes a plain-language verdict.
+
+```bash
+python -m rigor.agent            # watch the agent call tools and reason
+```
+
+Also available in the web app (the "Run agent analysis" button) and as
+`POST /api/agent`. This is the Track 4 "Autopilot Agent" shape: ambiguous input in,
+tool use + reasoning + a human-readable judgement out, with a human-in-the-loop
+review step before the report is finalised.
+
 ## Use Rigor from any AI agent (MCP)
 
 Rigor ships an [MCP](https://modelcontextprotocol.io) server that exposes its

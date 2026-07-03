@@ -136,12 +136,14 @@ function render(r) {
       <button class="chip" data-f="WARNING">To review ${r.warnings}</button>
       <button class="chip" data-f="OK">Clean ${okCount}</button>
       <button class="dlbtn" id="dlbtn">&#8595; Download report (.md)</button>
+      <button class="dlbtn" id="agentbtn">&#129302; Run agent analysis</button>
     </div>
     ${r.findings.length ? `<div class="reviewbar">
       <span>&#128100; Human review: dismiss any false positive, then export your finalized report.</span>
       <span class="kept" id="keptcount">${r.findings.length} kept</span>
     </div>` : ""}
-    <div class="findings">${sections || '<div class="empty">No statistics found to check.</div>'}</div>`;
+    <div class="findings">${sections || '<div class="empty">No statistics found to check.</div>'}</div>
+    <div id="agentbox"></div>`;
 
   report.classList.remove("hidden");
   report.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
@@ -151,6 +153,8 @@ function render(r) {
   }));
   const dl = report.querySelector("#dlbtn");
   if (dl) dl.addEventListener("click", () => downloadReport(r));
+  const ab = report.querySelector("#agentbtn");
+  if (ab) ab.addEventListener("click", () => runAgent(paper.value));
   report.querySelectorAll(".dismiss").forEach(btn => btn.addEventListener("click", () => {
     const el = btn.closest(".finding");
     const id = Number(btn.dataset.id);
@@ -180,6 +184,41 @@ function recomputeScore() {
   set("keptcount", `${kept.length} kept`);
   const rev = report.querySelector("#revised");
   if (rev) rev.style.display = dismissed.size ? "" : "none";
+}
+
+async function runAgent(text) {
+  const box = report.querySelector("#agentbox");
+  const btn = report.querySelector("#agentbtn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Agent reasoning…`;
+  box.innerHTML = "";
+  try {
+    const res = await fetch("/api/agent", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+    if (!res.ok) {
+      let m = `Error ${res.status}`;
+      try { const e = await res.json(); if (e.error) m = e.error; } catch (_) {}
+      throw new Error(m);
+    }
+    const d = await res.json();
+    const trace = (d.trace || []).map(t => {
+      const v = (t.result && t.result.verdict) || JSON.stringify(t.result);
+      return `<div class="atrace"><b>${esc(t.tool)}</b>(${esc(JSON.stringify(t.args))}) &rarr; ${esc(v)}</div>`;
+    }).join("");
+    box.innerHTML = `<div class="agentcard">
+      <div class="ahead">&#129302; Agent reasoning <span class="muted">&mdash; ${d.turns} turns, ${(d.trace || []).length} tool calls made by the model</span></div>
+      ${trace ? `<div class="atrace-wrap">${trace}</div>` : ""}
+      <div class="anarr">${esc(d.narrative || "").replace(/\n/g, "<br>")}</div>
+    </div>`;
+    box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (e) {
+    box.innerHTML = `<div class="empty">⚠️ ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `&#129302; Run agent analysis`;
+  }
 }
 
 function downloadReport(r) {
