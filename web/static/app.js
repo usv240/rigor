@@ -28,7 +28,7 @@ let lastR = null;
 
 fetch("/api/sample").then(r => r.json()).then(d => { paper.value = d.text; }).catch(() => {});
 pdfInput.addEventListener("change", () => {
-  hint.textContent = pdfInput.files[0] ? `📄 ${pdfInput.files[0].name}` : "";
+  hint.textContent = pdfInput.files[0] ? pdfInput.files[0].name : "";
 });
 runBtn.addEventListener("click", run);
 
@@ -55,7 +55,7 @@ async function run() {
     }
     render(await res.json());
   } catch (e) {
-    report.innerHTML = `<div class="empty">⚠️ ${e.message}. Check your API key / connection and try again.</div>`;
+    report.innerHTML = `<div class="empty">Error: ${e.message}. Check your API key / connection and try again.</div>`;
     report.classList.remove("hidden");
   } finally {
     setLoading(false);
@@ -135,11 +135,11 @@ function render(r) {
       <button class="chip" data-f="ERROR">Errors ${r.errors}</button>
       <button class="chip" data-f="WARNING">To review ${r.warnings}</button>
       <button class="chip" data-f="OK">Clean ${okCount}</button>
-      <button class="dlbtn" id="dlbtn">&#8595; Download report (.md)</button>
-      <button class="dlbtn" id="agentbtn">&#129302; Run agent analysis</button>
+      <button class="dlbtn" id="dlbtn">Download report</button>
+      <button class="dlbtn dlbtn-primary" id="agentbtn">Run agent analysis</button>
     </div>
     ${r.findings.length ? `<div class="reviewbar">
-      <span>&#128100; Human review: dismiss any false positive, then export your finalized report.</span>
+      <span>Human review: dismiss any false positive, then export your finalized report.</span>
       <span class="kept" id="keptcount">${r.findings.length} kept</span>
     </div>` : ""}
     <div class="findings">${sections || '<div class="empty">No statistics found to check.</div>'}</div>
@@ -162,7 +162,7 @@ function render(r) {
     else { dismissed.add(id); el.classList.add("dismissed"); btn.textContent = "Undo"; }
     recomputeScore();
   }));
-  report.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  report.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function recomputeScore() {
@@ -200,7 +200,7 @@ async function runAgent(text) {
   btn.disabled = true;
   btn.innerHTML = `<span class="spinner"></span> Agent working…`;
   box.innerHTML = `<div class="agentcard">
-    <div class="ahead">&#129302; Agent activity <span class="muted">&mdash; live Qwen tool-calling loop</span></div>
+    <div class="ahead">Agent activity <span class="muted">&mdash; live Qwen tool-calling loop</span></div>
     <div class="alog" id="alog"></div>
     <div class="anarr" id="anarr"></div>
   </div>`;
@@ -230,24 +230,24 @@ async function runAgent(text) {
         if (!line.startsWith("data: ")) continue;
         const ev = JSON.parse(line.slice(6));
         if (ev.type === "status") {
-          appendLog(log, `<span class="astatus">&#9656; ${esc(ev.msg)}</span>`);
+          appendLog(log, `<span class="astatus">${esc(ev.msg)}</span>`);
         } else if (ev.type === "tool") {
           const v = (ev.result && ev.result.verdict) || JSON.stringify(ev.result);
           const bad = /ERROR|IMPOSSIBLE|not significant|n\.s\./i.test(v);
-          appendLog(log, `<span class="acall">&#128295; <b>${esc(ev.tool)}</b>(${esc(JSON.stringify(ev.args))})</span>`
+          appendLog(log, `<span class="acall"><b>${esc(ev.tool)}</b>(${esc(JSON.stringify(ev.args))})</span>`
             + `<span class="${bad ? "av-bad" : "av-ok"}"> &rarr; ${esc(v)}</span>`);
         } else if (ev.type === "narrative") {
           narr.innerHTML = `<div class="ndivider">Agent's verdict</div>${esc(ev.text).replace(/\n/g, "<br>")}`;
         } else if (ev.type === "error") {
-          appendLog(log, `<span class="av-bad">&#9888; ${esc(ev.msg)}</span>`);
+          appendLog(log, `<span class="av-bad">Error: ${esc(ev.msg)}</span>`);
         }
       }
     }
   } catch (e) {
-    appendLog(log, `<span class="av-bad">&#9888; ${esc(e.message)}</span>`);
+    appendLog(log, `<span class="av-bad">Error: ${esc(e.message)}</span>`);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `&#129302; Run agent analysis`;
+    btn.innerHTML = "Run agent analysis";
   }
 }
 
