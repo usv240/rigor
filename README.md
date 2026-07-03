@@ -11,6 +11,7 @@ publishers with big budgets that existing integrity tools serve.
 
 - **Hackathon:** Global AI Hackathon Series with Qwen Cloud, Track 4 (Autopilot Agent)
 - **Powered by:** Qwen (Alibaba Cloud Model Studio) for extraction; exact statistics for every verdict
+- **Live demo (on Alibaba Cloud ECS):** http://47.236.166.20:8000
 
 ## Why it is not "just an AI wrapper"
 
