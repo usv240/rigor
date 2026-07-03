@@ -7,6 +7,34 @@
   --radius:16px; --shadow:0 10px 40px rgba(19,23,45,.08); --shadow-lg:0 24px 70px rgba(19,23,45,.16);
   --grad:linear-gradient(120deg,#6366f1,#06b6d4);
 }
+/* ---- dark theme (CSS-variable overrides) ---- */
+[data-theme="dark"]{
+  --ink:#05080f; --ink2:#0d1320; --bg:#0a0e17; --card:#141b28;
+  --text:#e7eaf3; --muted:#98a2b8; --line:#262f40;
+  --shadow:0 10px 40px rgba(0,0,0,.45); --shadow-lg:0 24px 70px rgba(0,0,0,.6);
+}
+[data-theme="dark"] nav{background:rgba(14,19,31,.78)}
+[data-theme="dark"] .tag{background:#20273c}
+[data-theme="dark"] textarea,[data-theme="dark"] .example .inp{background:#0e1421;color:var(--text)}
+[data-theme="dark"] .example .inp{color:var(--muted)}
+[data-theme="dark"] .finding,[data-theme="dark"] .chip,[data-theme="dark"] .dlbtn,
+[data-theme="dark"] .btn-ghost{background:var(--card)}
+[data-theme="dark"] .scorecard,[data-theme="dark"] .mcard,[data-theme="dark"] .agentcard{
+  background:linear-gradient(180deg,var(--card),#111725)}
+[data-theme="dark"] .nums,[data-theme="dark"] .fscount,[data-theme="dark"] .reviewbar,
+[data-theme="dark"] .cmp th{background:#1a2131}
+[data-theme="dark"] .finding .nums{color:var(--muted)}
+[data-theme="dark"] .fix{background:#1a2138;color:#c7d0ff}
+[data-theme="dark"] .fix b{color:#c7d0ff}
+[data-theme="dark"] .cmp .rigor{background:#1b2440}
+[data-theme="dark"] .ring::before{background:var(--card)}
+[data-theme="dark"] .stat .l,[data-theme="dark"] .who .w{color:var(--muted)}
+
+/* ---- theme toggle button ---- */
+.themebtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--card);
+  color:var(--text);cursor:pointer;display:grid;place-items:center;transition:.15s}
+.themebtn:hover{border-color:var(--accent);color:var(--accent)}
+
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{

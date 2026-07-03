@@ -32,6 +32,13 @@ pdfInput.addEventListener("change", () => {
 });
 runBtn.addEventListener("click", run);
 
+const themebtn = document.querySelector("#themebtn");
+if (themebtn) themebtn.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", cur);
+  localStorage.setItem("rigor-theme", cur);
+});
+
 async function run() {
   setLoading(true);
   report.classList.add("hidden");
@@ -162,7 +169,7 @@ function render(r) {
     else { dismissed.add(id); el.classList.add("dismissed"); btn.textContent = "Undo"; }
     recomputeScore();
   }));
-  report.scrollIntoView({ behavior: "smooth", block: "start" });
+  requestAnimationFrame(() => report.scrollIntoView({ behavior: "smooth", block: "start" }));
 }
 
 function recomputeScore() {

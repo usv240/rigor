@@ -3,6 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<script>
+  (function(){var k="rigor-theme",s=localStorage.getItem(k),
+    t=s||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+    document.documentElement.setAttribute("data-theme",t);})();
+</script>
 <title>Rigor - catch statistical errors before the reviewers do</title>
 <meta name="description" content="Rigor reads a paper, recomputes every p-value and mean with exact math, and flags the errors that get papers rejected and retracted. Free and open source.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +25,7 @@
       <a href="#checks">The checks</a>
       <a href="#faq">FAQ</a>
       <a href="#try">Try it</a>
+      <button class="themebtn" id="themebtn" aria-label="Toggle light and dark theme" title="Toggle theme"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 000 18z" fill="currentColor"/></svg></button>
       <a class="btn btn-ghost" href="https://github.com/usv240/rigor" target="_blank" style="padding:8px 16px">GitHub ↗</a>
     </div>
   </div>
