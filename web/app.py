@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 import tempfile
 import time
 from pathlib import Path
@@ -109,6 +110,7 @@ def api_agent_stream(request: Request, body: AuditIn) -> StreamingResponse:
 @limiter.limit("10/minute")
 async def api_audit_pdf(request: Request, file: UploadFile = File(...)) -> JSONResponse:
     t0 = time.time()
+    tmp_path = None
     try:
         data = await file.read()
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename or ".pdf").suffix) as tmp:
@@ -118,6 +120,12 @@ async def api_audit_pdf(request: Request, file: UploadFile = File(...)) -> JSONR
         result = audit_text(text).to_dict()
     except Exception as exc:  # noqa: BLE001
         return JSONResponse(status_code=502, content={"error": f"{type(exc).__name__}: {exc}"})
+    finally:
+        if tmp_path is not None:
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
     result["source"] = file.filename
     _log_audit(file.filename or "pdf", len(text), result, time.time() - t0)
     return JSONResponse(result)

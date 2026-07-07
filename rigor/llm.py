@@ -7,7 +7,9 @@ is the sandbox around the model, nothing more.
 """
 from __future__ import annotations
 
+import logging
 import os
+from dataclasses import dataclass
 
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -22,13 +24,46 @@ BASE_URL = os.getenv(
 LLM_MODEL = os.getenv("QWEN_LLM_MODEL", "qwen-plus")
 SEED = 7  # fixed seed + temperature 0 for reproducible extraction where supported
 
+_usage_log = logging.getLogger("rigor.usage")
+
+
+@dataclass
+class Usage:
+    """Process-level running token total, so cost is observable in the demo and in prod."""
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+
+    @property
+    def total_tokens(self) -> int:
+        return self.prompt_tokens + self.completion_tokens
+
+
+USAGE = Usage()
+
+
+def log_usage(resp, tag: str = "") -> None:
+    """Accumulate and log the token usage from a chat-completions response."""
+    u = getattr(resp, "usage", None)
+    if u is None:
+        return
+    pt = getattr(u, "prompt_tokens", 0) or 0
+    ct = getattr(u, "completion_tokens", 0) or 0
+    USAGE.calls += 1
+    USAGE.prompt_tokens += pt
+    USAGE.completion_tokens += ct
+    _usage_log.info(
+        '{"event": "qwen_usage", "tag": "%s", "prompt_tokens": %d, "completion_tokens": %d, '
+        '"cumulative_total": %d}', tag, pt, ct, USAGE.total_tokens)
+
 
 def client() -> OpenAI:
     if not API_KEY:
         raise RuntimeError("DASHSCOPE_API_KEY not set - add it to your .env")
-    # 30s timeout + up to 3 retries with exponential backoff (built into the SDK)
-    # so a transient Qwen hiccup (429 / 5xx / network) does not crash the request.
-    return OpenAI(api_key=API_KEY, base_url=BASE_URL, timeout=30.0, max_retries=3)
+    # 60s timeout + up to 3 retries with exponential backoff (built into the SDK) so a
+    # transient Qwen hiccup (429 / 5xx / network) does not crash the request. 60s (not
+    # 30s) gives long, full-text papers room to finish extraction and claim analysis.
+    return OpenAI(api_key=API_KEY, base_url=BASE_URL, timeout=60.0, max_retries=3)
 
 
 def chat(messages: list[dict], model: str | None = None, temperature: float = 0.0) -> str:
@@ -38,6 +73,7 @@ def chat(messages: list[dict], model: str | None = None, temperature: float = 0.
         temperature=temperature,
         seed=SEED,
     )
+    log_usage(resp, tag="chat")
     return resp.choices[0].message.content or ""
 
 

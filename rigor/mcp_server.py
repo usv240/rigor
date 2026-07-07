@@ -21,7 +21,7 @@ from __future__ import annotations
 from mcp.server.fastmcp import FastMCP
 
 from rigor.audit import audit_text
-from rigor.checks import check_df_vs_n, check_pvalue, grim
+from rigor.checks import check_cohens_d, check_df_vs_n, check_pvalue, grim, grimmer
 
 mcp = FastMCP("rigor")
 
@@ -57,6 +57,27 @@ def grim_test(mean: float, n: int, n_items: int = 1, decimals: int = 2) -> dict:
     means."""
     g = grim(mean, n, n_items, decimals)
     return {"possible": g.possible, "nearest_possible": g.nearest_possible, "verdict": g.message}
+
+
+@mcp.tool()
+def grimmer_test(mean: float, sd: float, n: int, n_items: int = 1, decimals: int = 2) -> dict:
+    """Check whether a reported standard deviation is arithmetically possible for `n`
+    integer responses with the given mean (GRIMMER test - the SD counterpart of GRIM).
+    Conservative: a False verdict is a proof of impossibility, never a false alarm."""
+    g = grimmer(mean, sd, n, n_items, decimals)
+    return {"possible": g.possible, "reason": g.reason, "verdict": g.message}
+
+
+@mcp.tool()
+def cohens_d(t: float, reported_d: float, n1: int | None = None, n2: int | None = None,
+             n: int | None = None, design: str = "independent") -> dict:
+    """Check whether a reported Cohen's d agrees with its t-statistic. Independent-samples:
+    give n1 and n2. Paired/one-sample: give n and design='paired'. Pure arithmetic."""
+    r = check_cohens_d(t, reported_d, n1=n1, n2=n2, n=n, design=design)
+    if r is None:
+        return {"applicable": False, "note": "need n1+n2 (independent) or n (paired) to recompute d"}
+    return {"applicable": True, "consistent": r.consistent, "computed_d": round(r.computed_d, 4),
+            "verdict": r.message}
 
 
 @mcp.tool()

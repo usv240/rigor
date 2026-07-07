@@ -8,18 +8,20 @@ const SEV = {
   WARNING: { color: "#f59e0b", label: "REVIEW" },
   OK:      { color: "#16a34a", label: "OK" },
 };
-const KIND_ORDER = ["pvalue", "sample", "grim", "claim"];
+const KIND_ORDER = ["pvalue", "sample", "grim", "grimmer", "claim"];
 const KIND_LABEL = {
-  pvalue: "p-value recomputation",
-  sample: "df vs N cross-check",
-  grim:   "GRIM (impossible means)",
-  claim:  "claim vs evidence",
+  pvalue:  "p-value recomputation",
+  sample:  "df vs N cross-check",
+  grim:    "GRIM (impossible means)",
+  grimmer: "GRIMMER (impossible SDs)",
+  claim:   "claim vs evidence",
 };
 const KIND_TIP = {
-  pvalue: "A p-value measures how likely a result is just chance. Below .05 is usually called 'significant'. Rigor recomputes it from the reported numbers to check it is right.",
-  sample: "Degrees of freedom (df) depend on how many participants a test used. Rigor checks the df is even possible for the study's reported sample size (N).",
-  grim:   "For whole-number ratings, an average can only land on certain values. GRIM checks whether a reported mean is arithmetically possible.",
-  claim:  "Rigor checks whether the paper's words match its numbers, for example calling a result 'significant' when the math says it is not.",
+  pvalue:  "A p-value measures how likely a result is just chance. Below .05 is usually called 'significant'. Rigor recomputes it from the reported numbers to check it is right.",
+  sample:  "Degrees of freedom (df) depend on how many participants a test used. Rigor checks the df is even possible for the study's reported sample size (N).",
+  grim:    "For whole-number ratings, an average can only land on certain values. GRIM checks whether a reported mean is arithmetically possible.",
+  grimmer: "GRIMMER extends GRIM to the standard deviation: for whole-number ratings, only certain SDs are arithmetically possible for a given mean and sample size.",
+  claim:   "Rigor checks whether the paper's words match its numbers, for example calling a result 'significant' when the math says it is not.",
 };
 const SORT = { ERROR: 0, WARNING: 1, OK: 2 };
 
@@ -31,6 +33,12 @@ pdfInput.addEventListener("change", () => {
   hint.textContent = pdfInput.files[0] ? pdfInput.files[0].name : "";
 });
 runBtn.addEventListener("click", run);
+
+const toTop = document.querySelector("#totop");
+if (toTop) {
+  addEventListener("scroll", () => toTop.classList.toggle("show", scrollY > 700), { passive: true });
+  toTop.addEventListener("click", () => scrollTo({ top: 0, behavior: "smooth" }));
+}
 
 const themebtn = document.querySelector("#themebtn");
 if (themebtn) themebtn.addEventListener("click", () => {
@@ -76,19 +84,26 @@ function setLoading(on) {
 
 function card(f, i) {
   const s = SEV[f.severity];
+  const conf = (typeof f.confidence === "number" && f.confidence < 0.999)
+    ? `<span class="conf" title="How reproducibly the model read these numbers across repeated extractions. The verdict itself is exact math; this reflects extraction reliability only.">read ${Math.round(f.confidence * 100)}%</span>`
+    : "";
+  const details =
+    (f.method ? `<div class="frow2"><span class="flabel">The math</span><div class="fval"><span class="fmono">${esc(f.method)}</span></div></div>` : "")
+    + (f.fix ? `<div class="frow2"><span class="flabel">What to do</span><div class="fval">${esc(f.fix)}</div></div>` : "");
+  // Collapsed by default: header + one-line meaning + the key numbers stay visible;
+  // "The math" and "What to do" expand on click, so 14 findings scan in one screen.
   return `<div class="finding sev-${f.severity}" data-sev="${f.severity}" data-id="${f._id}"
       style="border-left-color:${s.color};animation-delay:${i * 35}ms">
-    <div class="frow">
+    <div class="frow fhead">
       <span class="badge" style="background:${s.color}">${s.label}</span>
       <span class="claimline">${esc(f.claim) || "<span class='muted'>(statistic)</span>"}</span>
+      ${conf}
       <button class="dismiss" data-id="${f._id}">Dismiss</button>
+      ${details ? `<span class="fchev" aria-hidden="true">&#9662;</span>` : ""}
     </div>
     ${f.plain ? `<div class="plain">${esc(f.plain)}</div>` : ""}
-    <div class="fdetails">
-      <div class="frow2"><span class="flabel">Numbers</span><div class="fval">reported <b>${esc(f.reported)}</b> &rarr; recomputed <b>${esc(f.recomputed)}</b></div></div>
-      ${f.method ? `<div class="frow2"><span class="flabel">The math</span><div class="fval"><span class="fmono">${esc(f.method)}</span></div></div>` : ""}
-      ${f.fix ? `<div class="frow2"><span class="flabel">What to do</span><div class="fval">${esc(f.fix)}</div></div>` : ""}
-    </div>
+    <div class="frow2 fnums"><span class="flabel">Numbers</span><div class="fval">reported <b>${esc(f.reported)}</b> &rarr; recomputed <b>${esc(f.recomputed)}</b></div></div>
+    ${details ? `<div class="fdetails">${details}</div>` : ""}
   </div>`;
 }
 
@@ -136,7 +151,7 @@ function render(r) {
             <i class="info" data-tip="An AI-flagged judgment call, like causal or over-general wording. Not a proof: use your own judgment.">i</i></span>
           <span><span class="dotc" style="background:#16a34a"></span><b id="cOk">${okCount}</b> clean
             <i class="info" data-tip="Checked and found consistent. No problem here.">i</i></span>
-          <span class="muted">· ${r.n_tests} test(s), ${r.n_means} mean(s) · ${esc(r.source || "")}</span>
+          <span class="muted">· ${r.n_tests} test(s), ${r.n_means} mean(s)${agreementNote(r)} · ${esc(r.source || "")}</span>
         </div>
       </div>
     </div>
@@ -145,9 +160,11 @@ function render(r) {
       <button class="chip" data-f="ERROR">Errors ${r.errors}</button>
       <button class="chip" data-f="WARNING">To review ${r.warnings}</button>
       <button class="chip" data-f="OK">Clean ${okCount}</button>
+      <button class="dlbtn" id="expandall">Expand all</button>
       <button class="dlbtn" id="dlbtn">Download report</button>
       <button class="dlbtn dlbtn-primary" id="agentbtn">Run agent analysis</button>
     </div>
+    ${rootCauseHtml(r)}
     ${r.findings.length ? `<div class="reviewbar">
       <span>Human review: dismiss any false positive, then export your finalized report.</span>
       <span class="kept" id="keptcount">${r.findings.length} kept</span>
@@ -165,6 +182,19 @@ function render(r) {
   if (dl) dl.addEventListener("click", () => downloadReport(r));
   const ab = report.querySelector("#agentbtn");
   if (ab) ab.addEventListener("click", () => runAgent(paper.value));
+
+  // Collapsible findings: click a finding's header to expand its math + fix.
+  report.querySelectorAll(".fhead").forEach(h => h.addEventListener("click", e => {
+    if (e.target.closest(".dismiss")) return;   // the Dismiss button has its own job
+    h.closest(".finding").classList.toggle("open");
+  }));
+  const ea = report.querySelector("#expandall");
+  if (ea) ea.addEventListener("click", () => {
+    const cards = [...report.querySelectorAll(".finding")];
+    const anyClosed = cards.some(el => !el.classList.contains("open"));
+    cards.forEach(el => el.classList.toggle("open", anyClosed));
+    ea.textContent = anyClosed ? "Collapse all" : "Expand all";
+  });
   report.querySelectorAll(".dismiss").forEach(btn => btn.addEventListener("click", () => {
     const el = btn.closest(".finding");
     const id = Number(btn.dataset.id);
@@ -306,6 +336,28 @@ function applyFilter(f) {
     const any = [...sec.querySelectorAll(".finding")].some(el => el.style.display !== "none");
     sec.style.display = any ? "" : "none";
   });
+}
+
+function rootCauseHtml(r) {
+  const hs = r.hypotheses || [];
+  if (!hs.length) return "";
+  const items = hs.map(h => `<div class="rc-item">
+      <span class="rc-count">explains ${h.explains}</span>
+      <div class="rc-body"><div class="rc-sum">${esc(h.summary)}</div>
+        <div class="rc-fix">Suggested fix: <b>${esc(h.repair)}</b></div></div>
+    </div>`).join("");
+  return `<div class="rootcause">
+    <div class="rc-head">Likely root cause
+      <i class="info" data-tip="Beyond flagging errors, Rigor searches for the single reported number whose correction resolves the most findings — verified by re-running the checks. A hypothesis for you to confirm, not a verdict.">i</i>
+      <span class="rc-tag">which number to fix first</span>
+    </div>${items}</div>`;
+}
+
+function agreementNote(r) {
+  const x = r.extraction;
+  if (!x || !(x.samples > 1)) return "";
+  return ` · ${Math.round(x.agreement * 100)}% extraction agreement (${x.samples} runs)`
+    + `<i class="info" data-tip="The math verdicts are always exact — only reading a messy PDF can vary. So Rigor read this paper ${x.samples} times and kept only the numbers the runs agreed on. Agreement is how often they matched: a live measure of how reliably it read the text.">i</i>`;
 }
 
 function esc(s) {

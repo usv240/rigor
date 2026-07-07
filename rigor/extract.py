@@ -10,8 +10,10 @@ no judgement about correctness (that is the deterministic engine's job).
 from __future__ import annotations
 
 import json
+import os
+from collections import Counter
 
-from rigor.llm import LLM_MODEL, SEED, client
+from rigor.llm import LLM_MODEL, SEED, client, log_usage
 
 SYSTEM = """You are a meticulous extraction engine for scientific papers. Call the \
 submit_extraction function with everything you find. Rules:
@@ -25,6 +27,8 @@ submit_extraction function with everything you find. Rules:
 - "means": ONLY include a mean when the responses are WHOLE NUMBERS on a bounded
   rating scale (e.g. 1-5 Likert) or simple counts. NEVER include means of physical
   measurements, times, distances, weights, percentages, or any continuous quantity.
+  Include "sd" (the reported standard deviation for that mean) when it is printed,
+  else null.
 - "sample_size": the overall N of the study if clearly stated, else null.
 
 Extract faithfully what is printed; do not judge correctness."""
@@ -61,6 +65,7 @@ EXTRACTION_TOOL = {
                         "properties": {
                             "value": {"type": "number"},
                             "n": {"type": "integer"},
+                            "sd": {"type": ["number", "null"]},
                             "n_items": {"type": "integer"},
                             "decimals": {"type": "integer"},
                             "scale": {"type": "string"},
@@ -92,8 +97,8 @@ def _extract_json(raw: str) -> dict:
         return {}
 
 
-def extract(paper_text: str) -> dict:
-    """Return {"stats": [...], "means": [...], "sample_size": int|None} via Qwen tool-calling."""
+def _extract_once(paper_text: str) -> dict:
+    """A single Qwen tool-calling extraction pass."""
     resp = client().chat.completions.create(
         model=LLM_MODEL,
         messages=[
@@ -105,6 +110,7 @@ def extract(paper_text: str) -> dict:
         temperature=0,
         seed=SEED,
     )
+    log_usage(resp, tag="extract")
     msg = resp.choices[0].message
     data: dict = {}
     if msg.tool_calls:
@@ -119,3 +125,80 @@ def extract(paper_text: str) -> dict:
     data.setdefault("means", [])
     data.setdefault("sample_size", None)
     return data
+
+
+def _num(x):
+    try:
+        return round(float(x), 4)
+    except (TypeError, ValueError):
+        return None
+
+
+def _canon_stat(s: dict) -> tuple:
+    return (str(s.get("test", "")).lower(), _num(s.get("statistic")), _num(s.get("df1")),
+            _num(s.get("df2")), _num(s.get("reported_p")), s.get("comparator", "="))
+
+
+def _canon_mean(m: dict) -> tuple:
+    return (_num(m.get("value")), m.get("n"), _num(m.get("sd")), m.get("n_items", 1))
+
+
+def _reconcile(runs: list[dict], key_fn, list_name: str) -> tuple[list[dict], list[float]]:
+    """Majority-vote items across runs; attach each survivor's support ratio."""
+    k = len(runs)
+    majority = k // 2 + 1
+    buckets: dict[tuple, dict] = {}
+    for run in runs:
+        seen = set()
+        for item in run.get(list_name, []) or []:
+            key = key_fn(item)
+            if key in seen:  # don't let one run's duplicate inflate support
+                continue
+            seen.add(key)
+            b = buckets.setdefault(key, {"count": 0, "item": item})
+            b["count"] += 1
+    kept, supports = [], []
+    for b in buckets.values():
+        if b["count"] >= majority:
+            support = round(b["count"] / k, 3)
+            item = dict(b["item"])
+            item["_support"] = support
+            kept.append(item)
+            supports.append(support)
+    return kept, supports
+
+
+def extract(paper_text: str, samples: int | None = None) -> dict:
+    """Return {"stats": [...], "means": [...], "sample_size": int|None, "extraction": {...}}.
+
+    With samples > 1, Rigor extracts several times and reconciles the results by
+    majority vote: an item is kept only if it appears in most runs, which filters out
+    one-off misreads, and each survivor carries a `_support` ratio (its reproducibility
+    across runs). The `extraction.agreement` field is the mean support - a live,
+    honest measure of how reliably the model read THIS paper. Extraction is the only
+    non-deterministic part of Rigor, so this turns that uncertainty into a number.
+    """
+    if samples is None:
+        samples = int(os.getenv("RIGOR_EXTRACT_SAMPLES", "1"))
+    samples = max(1, samples)
+
+    if samples == 1:
+        data = _extract_once(paper_text)
+        data["extraction"] = {"samples": 1, "agreement": 1.0}
+        return data
+
+    runs = [_extract_once(paper_text) for _ in range(samples)]
+    stats, s_sup = _reconcile(runs, _canon_stat, "stats")
+    means, m_sup = _reconcile(runs, _canon_mean, "means")
+
+    ns = [r.get("sample_size") for r in runs if r.get("sample_size") is not None]
+    sample_size = Counter(ns).most_common(1)[0][0] if ns else None
+
+    supports = s_sup + m_sup
+    agreement = round(sum(supports) / len(supports), 3) if supports else 1.0
+    return {
+        "stats": stats,
+        "means": means,
+        "sample_size": sample_size,
+        "extraction": {"samples": samples, "agreement": agreement},
+    }

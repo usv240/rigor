@@ -18,7 +18,7 @@ class Severity(str, Enum):
 
 @dataclass
 class Finding:
-    kind: str            # "pvalue" | "grim" | "sample" | "claim"
+    kind: str            # "pvalue" | "grim" | "grimmer" | "sample" | "claim"
     severity: Severity
     claim: str
     detail: str
@@ -28,6 +28,7 @@ class Finding:
     fix: str = ""        # what to do about it
     weight: float = 0.0  # severity weight used in scoring (e.g. decision error = 2.0)
     method: str = ""     # the exact computation used (transparency)
+    confidence: float = 1.0  # how reliably the underlying numbers were extracted (0-1)
 
     def to_dict(self) -> dict:
         d = self.__dict__.copy()
@@ -41,6 +42,8 @@ class AuditReport:
     n_tests: int = 0
     n_means: int = 0
     skipped: int = 0
+    extraction: dict = field(default_factory=lambda: {"samples": 1, "agreement": 1.0})
+    hypotheses: list = field(default_factory=list)  # root-cause hypotheses (see rigor/localize.py)
 
     @property
     def errors(self) -> list[Finding]:
@@ -65,6 +68,8 @@ class AuditReport:
             "errors": len(self.errors),
             "warnings": len(self.warnings),
             "skipped": self.skipped,
+            "extraction": self.extraction,
+            "hypotheses": [h.to_dict() for h in self.hypotheses],
             "findings": [f.to_dict() for f in self.findings],
         }
 
@@ -81,8 +86,12 @@ class AuditReport:
             f"  checked         : {self.n_tests} test(s), {self.n_means} mean(s)"
             + (f"  ({self.skipped} skipped)" if self.skipped else ""),
             f"  findings        : {len(self.errors)} error(s), {len(self.warnings)} warning(s)",
-            "=" * 68,
         ]
+        if self.extraction.get("samples", 1) > 1:
+            lines.append(
+                f"  extraction      : {self.extraction['samples']} runs reconciled, "
+                f"{self.extraction['agreement']:.0%} agreement")
+        lines.append("=" * 68)
 
         def block(title: str, items: list[Finding]) -> None:
             if not items:
@@ -95,6 +104,13 @@ class AuditReport:
 
         block("ERRORS (likely wrong)", self.errors)
         block("WARNINGS (inconsistent)", self.warnings)
+
+        if self.hypotheses:
+            lines.append("\n  LIKELY ROOT CAUSES (which number to fix first)")
+            for h in self.hypotheses:
+                lines.append(f"    * explains {h.explains} finding(s): {h.summary}")
+                lines.append(f"           fix: {h.repair}")
+
         ok = [f for f in self.findings if f.severity is Severity.OK]
         lines.append(f"\n  {len(ok)} result(s) checked out clean.")
         lines.append("")

@@ -14,14 +14,16 @@ from __future__ import annotations
 
 import sys
 
-from rigor.checks import check_df_vs_n, check_pvalue, grim
+from rigor.checks import check_df_vs_n, check_pvalue, grim, grimmer
 from rigor.claims import analyze_claims
-from rigor.explain import explain_claim, explain_dfn, explain_grim, explain_pvalue
+from rigor.explain import explain_claim, explain_dfn, explain_grim, explain_grimmer, explain_pvalue
 from rigor.extract import extract
 from rigor.ingest import load_text
+from rigor.localize import localize
 from rigor.report import AuditReport, Finding, Severity
 
-# Built-in demo paper: THREE planted errors + ONE correct result (control).
+# Built-in demo paper: planted errors (bad p-value, impossible mean, impossible SD,
+# df-vs-N clash, overclaim) alongside a correct control result the math leaves alone.
 SAMPLE_PAPER = """
 In Study 1 (N = 10), participants rated the target on a 1-5 scale. Those in the
 treatment condition rated it higher (M = 3.45, SD = 0.82) than controls
@@ -30,6 +32,9 @@ t(48) = 1.90, p < .001.
 
 A one-way ANOVA testing the three groups revealed no significant differences,
 F(2, 57) = 3.20, p = .35.
+
+Separately, baseline enjoyment ratings averaged M = 3.30 (SD = 0.50) on the same
+1-5 scale (N = 10).
 
 Finally, attitude correlated with behavior, r(38) = .42, p = .007.
 
@@ -60,6 +65,7 @@ def audit_text(text: str) -> AuditReport:
     data = extract(text)
     stats, means = data["stats"], data["means"]
     report = AuditReport(n_tests=len(stats), n_means=len(means))
+    report.extraction = data.get("extraction", {"samples": 1, "agreement": 1.0})
     try:
         stated_n = int(data["sample_size"]) if data.get("sample_size") is not None else None
     except (TypeError, ValueError):
@@ -105,12 +111,19 @@ def audit_text(text: str) -> AuditReport:
                 fix=fix,
                 weight=2.0 if r.decision_error else 0.0 if r.consistent else 0.8,
                 method=_pval_method(s),
+                confidence=float(s.get("_support", 1.0)),
             )
         )
 
     for m in means:
+        conf = float(m.get("_support") or 1.0)
+        # The model can emit an explicit null for these; .get(key, default) keeps the None,
+        # so coerce it here rather than let int(None) crash the whole audit.
+        ni, dec = m.get("n_items"), m.get("decimals")
+        n_items = 1 if ni is None else int(ni)
+        decimals = 2 if dec is None else int(dec)
         try:
-            g = grim(float(m["value"]), int(m["n"]), int(m.get("n_items", 1)), int(m.get("decimals", 2)))
+            g = grim(float(m["value"]), int(m["n"]), n_items, decimals)
         except Exception:  # noqa: BLE001
             report.skipped += 1
             continue
@@ -127,8 +140,36 @@ def audit_text(text: str) -> AuditReport:
                 fix=fix,
                 weight=0.0 if g.possible else 1.5,
                 method=f"a mean of {m['n']} whole-number responses must be an integer sum / {m['n']}",
+                confidence=conf,
             )
         )
+
+        # GRIMMER: if an SD is reported for this mean, check the SD's granularity too.
+        sd = m.get("sd")
+        if sd is not None and n_items == 1:
+            try:
+                gm = grimmer(float(m["value"]), float(sd), int(m["n"]), n_items, decimals)
+            except Exception:  # noqa: BLE001
+                gm = None
+            # Only surface SD-level results (the mean itself is already covered by GRIM above).
+            if gm is not None and gm.reason != "mean" and "NOT APPLICABLE" not in gm.message:
+                plain, fix = explain_grimmer(gm)
+                report.findings.append(
+                    Finding(
+                        kind="grimmer",
+                        severity=Severity.OK if gm.possible else Severity.ERROR,
+                        claim=(m.get("context") or "").strip(),
+                        detail=gm.message,
+                        reported=f"M = {m['value']:g}, SD = {float(sd):g}, N = {m['n']}",
+                        recomputed="achievable" if gm.possible else "impossible SD",
+                        plain=plain,
+                        fix=fix,
+                        weight=0.0 if gm.possible else 1.5,
+                        method=f"sum of squares SD^2*(N-1)+S^2/N must be a whole number with the "
+                               f"same parity as the sum S (GRIMMER)",
+                        confidence=conf,
+                    )
+                )
 
     # df-vs-N cross-consistency: does a test's df fit the stated sample size?
     if stated_n is not None:
@@ -148,6 +189,7 @@ def audit_text(text: str) -> AuditReport:
                         fix=fix,
                         weight=1.5,
                         method=f"{s.get('test')}(df={s.get('df1')}) requires N >= {dfn.implied_min_n} (df = N - 1 or N - 2)",
+                        confidence=float(s.get("_support", 1.0)),
                     )
                 )
 
@@ -185,6 +227,10 @@ def audit_text(text: str) -> AuditReport:
         unique.append(f)
     report.findings = unique
 
+    # Error localization: which single reported number, if corrected, resolves the most
+    # findings? A novel step beyond detection - see rigor/localize.py.
+    report.hypotheses = localize(stats, means, stated_n)
+
     return report
 
 
@@ -196,7 +242,7 @@ def main(argv: list[str]) -> int:
     if argv:
         text, source = load_text(argv[0]), argv[0]
     else:
-        text, source = SAMPLE_PAPER, "built-in demo paper (3 planted errors, 1 correct)"
+        text, source = SAMPLE_PAPER, "built-in demo paper (planted errors + 1 correct control)"
     print(f"Reading: {source}")
     report = audit_text(text)
     print(report.pretty(source=source))

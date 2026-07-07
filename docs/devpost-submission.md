@@ -8,7 +8,7 @@ Copy-paste ready. Fill the two bracketed links (video, blog) once recorded/poste
 Rigor
 
 ## Elevator pitch (tagline)
-An AI research-integrity referee that catches the statistical errors before the reviewers do. The AI reads the paper; exact math renders every verdict.
+An agent that automates the statistical-integrity screening step of manuscript submission - reading the paper and recomputing every number with exact math. The AI reads; the math renders every verdict, so nothing can be hallucinated.
 
 ## Track
 Track 4: Autopilot Agent
@@ -24,18 +24,26 @@ who most needs the help - the author about to submit - has nothing. We built Rig
 for them.
 
 ## What it does
-Paste a paper (or drop a PDF) and Rigor:
+Paste a paper (or drop a PDF, or point it at a whole submission folder) and Rigor:
 - **Recomputes every p-value** from its test statistic (statcheck-style) and flags
   decision-flipping errors.
-- **Runs the GRIM test** to catch arithmetically impossible means.
-- **Cross-checks degrees of freedom against the sample size** - a check no other
-  tool does.
+- **Runs GRIM and GRIMMER** to catch arithmetically impossible means AND standard
+  deviations.
+- **Cross-checks degrees of freedom against the sample size**, and **checks reported
+  effect sizes** (Cohen's d against its t) - cross-checks no other tool does.
 - **Detects "spin"** - claims whose wording overstates the numbers, grounded in the
   results the math already verified.
+- **Localizes the likely error** - a minimum-repair search over the paper's numeric
+  constraint graph that names the single value to fix first (e.g. "N=10 is the likely
+  typo; every flagged df is consistent once N >= 49"), verified by re-running the checks.
+- Runs extraction several times and **reconciles by majority vote**, reporting a live
+  extraction-agreement score and a per-finding confidence.
 - Explains each finding in **plain language** with concrete correction options, and
   lets the user **dismiss false positives** before finalising a downloadable report.
 
-It runs as a website, a JSON API, an **MCP server** (so any AI agent can call the
+It runs as a website, a JSON API, an installable `rigor` **CLI**, a **batch tool**
+that triages a whole submission queue to CSV/JSON, a drop-in **GitHub Action** that
+screens manuscripts on every commit, an **MCP server** (so any AI agent can call the
 checks as tools), and a genuine **Qwen tool-calling agent** that decides what to
 check, calls the deterministic tools itself, reasons about the results, and
 synthesises whether the errors are systematic.
@@ -63,8 +71,13 @@ synthesises whether the errors are systematic.
 - Turning a pipeline into a real agent for Track 4, with tool use and reasoning.
 
 ## Accomplishments we are proud of
-- **100% detection, 0% false positives** on a 32-case benchmark spanning t, F,
-  chi-square, r, z, GRIM, and df-vs-N.
+- **100% precision and recall on 530 injected-error cases** in a deterministic-core
+  benchmark that runs offline with no API key, plus 100% detection / 0% false
+  positives end-to-end on a 32-case pipeline benchmark.
+- Six independent, provable checks - including **GRIMMER**, which almost no tool
+  implements - each using only necessary conditions so a flag is never a false alarm.
+- **Error localization**: a minimum-repair search that goes beyond detection to name
+  the single number most likely at fault - a capability no other integrity tool has.
 - A **verified real-world catch**: on a published Geology paper (Eppes et al., 2018),
   Rigor flagged a correlation across only four rock types claiming p < .05 that
   recomputes to about .08 - confirmed against the paper's own methods.
@@ -78,7 +91,8 @@ LLM demo into a tool people can trust.
 
 ## What's next
 Scale the validation to a large corpus of retracted/corrected papers; add
-recompute-from-summary-stats; support more test types and one-tailed detection.
+recompute-from-summary-stats; support more test types and one-tailed detection;
+integrate the batch tool into a submission-portal webhook so screening runs on upload.
 
 ## Built with
 python, qwen, alibaba-cloud, model-studio, dashscope, fastapi, scipy, pymupdf, mcp,

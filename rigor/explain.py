@@ -44,6 +44,20 @@ def explain_grim(g) -> tuple[str, str]:
                    f"responses), more means become possible - state the number of items if so.")
 
 
+def explain_grimmer(g) -> tuple[str, str]:
+    if g.possible:
+        return ("This standard deviation is achievable for the reported sample size. No issue here.", "")
+    if g.reason == "mean":
+        plain = (f"The reported mean {g.reported_mean:g} is already impossible for {g.n} whole-number "
+                 f"responses, so its standard deviation cannot be valid either.")
+        return (plain, "Recheck the mean and N first (see the GRIM finding); the SD depends on them.")
+    plain = (f"A standard deviation of {g.reported_sd:g} is arithmetically impossible for {g.n} "
+             f"whole-number responses with a mean of {g.reported_mean:g}. No set of integer answers "
+             f"produces this mean and SD together.")
+    return (plain, f"Recheck the SD, the mean, and N for a transcription or rounding error. If scores "
+                   f"are sums of several items, state that - it changes what is possible.")
+
+
 def explain_dfn(d) -> tuple[str, str]:
     plain = (f"This result's degrees of freedom require at least {d.implied_min_n} participants, "
              f"but the study reports only {d.stated_n}. Both numbers cannot be correct.")

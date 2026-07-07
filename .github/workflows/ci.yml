@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - name: Install package (tests pyproject + console script)
+        run: pip install .
+      - name: Verify the rigor command is installed
+        run: rigor help
+      - name: Unit tests (deterministic core, no API key)
+        run: python -m pytest tests/ -q
+      - name: Deterministic-core benchmark (no API key)
+        run: python -m rigor.benchmark_checks
+      - name: No-API demo
+        run: python -m rigor.demo_checks

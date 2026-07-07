@@ -1,0 +1,48 @@
+name: "Rigor statistical-integrity check"
+description: "Screen research papers (PDF/text) for statistical inconsistencies on every push. The AI reads; exact math renders every verdict."
+branding:
+  icon: "check-circle"
+  color: "blue"
+
+inputs:
+  path:
+    description: "File or folder of papers to check (.pdf/.txt/.md)"
+    required: false
+    default: "."
+  min-score:
+    description: "Fail the job if any paper scores below this integrity score (0-100)"
+    required: false
+    default: "0"
+  dashscope-api-key:
+    description: "Qwen / DashScope API key (store as a repo secret)"
+    required: true
+  dashscope-base-url:
+    description: "DashScope base URL (workspace endpoint)"
+    required: false
+    default: ""
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+    - name: Install Rigor
+      shell: bash
+      run: pip install "git+https://github.com/usv240/rigor.git"
+    - name: Screen papers
+      shell: bash
+      env:
+        DASHSCOPE_API_KEY: ${{ inputs.dashscope-api-key }}
+        DASHSCOPE_BASE_URL: ${{ inputs.dashscope-base-url }}
+      run: |
+        rigor batch "${{ inputs.path }}" --csv rigor-report.csv --json rigor-report.json --min-score "${{ inputs.min-score }}"
+    - name: Upload integrity report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: rigor-report
+        path: |
+          rigor-report.csv
+          rigor-report.json

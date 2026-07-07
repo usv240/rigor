@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rigor-integrity"
+version = "0.2.0"
+description = "An agent that automates statistical-integrity screening of research papers: the AI reads, exact math renders every verdict."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "usv240" }]
+keywords = ["research-integrity", "statcheck", "grim", "grimmer", "p-values", "qwen", "agent", "peer-review"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "openai>=1.40",
+    "python-dotenv>=1.0",
+    "scipy>=1.11",
+    "pymupdf>=1.24",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+    "slowapi>=0.1.9",
+    "mcp>=1.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+rigor = "rigor.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/usv240/rigor"
+Repository = "https://github.com/usv240/rigor"
+
+[tool.setuptools]
+packages = ["rigor", "rigor.checks", "web"]
+
+[tool.setuptools.package-data]
+web = ["static/*"]

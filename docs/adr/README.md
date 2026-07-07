@@ -27,5 +27,8 @@ flowchart TD
 - [0004 - Keep a human in the loop](0004-human-in-the-loop.md)
 - [0005 - Deploy on Alibaba Cloud ECS with Docker](0005-deploy-on-alibaba-ecs.md)
 - [0006 - Expose the checks as an MCP server](0006-mcp-server.md)
+- [0007 - Reconcile several extractions, and report the agreement](0007-extraction-reconciliation.md)
+- [0008 - Localize the error, don't just detect it](0008-error-localization.md)
+- [0009 - Ship an adoption surface (CLI, batch, GitHub Action)](0009-adoption-surface.md)
 
 The full system view is in [../architecture.md](../architecture.md).

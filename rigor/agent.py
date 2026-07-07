@@ -18,9 +18,9 @@ from __future__ import annotations
 import json
 import sys
 
-from rigor.checks import check_df_vs_n, check_pvalue, grim
+from rigor.checks import check_df_vs_n, check_pvalue, grim, grimmer
 from rigor.ingest import load_text
-from rigor.llm import LLM_MODEL, SEED, client
+from rigor.llm import LLM_MODEL, SEED, client, log_usage
 
 SYSTEM = """You are Rigor, a research-integrity auditor AGENT. You are given a \
 paper's text. Work in steps:
@@ -30,8 +30,10 @@ paper's text. Work in steps:
 2. For EACH one, CALL the matching tool with the exact numbers you read:
    - recompute_pvalue for any test with a p-value,
    - grim_test for a mean on an integer scale,
+   - grimmer_test for a mean that ALSO reports a standard deviation on an integer scale,
    - check_df_vs_n when a test's df can be compared to the study's stated N.
-   You must NEVER decide a verdict yourself - only the tools decide. Call tools.
+   Call MULTIPLE tools in the same step when the checks are independent - it is faster
+   and expected. You must NEVER decide a verdict yourself - only the tools decide.
 3. After a tool returns, reason briefly about what it means (a decision-flipping
    error is serious; a tiny rounding mismatch is minor).
 4. When you have checked everything, STOP calling tools and write a final
@@ -62,6 +64,14 @@ TOOLS = [
             "n_items": {"type": "integer"}, "decimals": {"type": "integer"},
         }, "required": ["mean", "n"]}}},
     {"type": "function", "function": {
+        "name": "grimmer_test",
+        "description": "Check whether a reported standard deviation is possible for N integer "
+                       "responses with the given mean (SD counterpart of GRIM).",
+        "parameters": {"type": "object", "properties": {
+            "mean": {"type": "number"}, "sd": {"type": "number"}, "n": {"type": "integer"},
+            "n_items": {"type": "integer"}, "decimals": {"type": "integer"},
+        }, "required": ["mean", "sd", "n"]}}},
+    {"type": "function", "function": {
         "name": "check_df_vs_n",
         "description": "Check whether a test's degrees of freedom fit the stated sample size N.",
         "parameters": {"type": "object", "properties": {
@@ -79,13 +89,16 @@ def _run_tool(name: str, a: dict) -> dict:
     if name == "grim_test":
         g = grim(a["mean"], a["n"], a.get("n_items", 1), a.get("decimals", 2))
         return {"possible": g.possible, "verdict": g.message}
+    if name == "grimmer_test":
+        g = grimmer(a["mean"], a["sd"], a["n"], a.get("n_items", 1), a.get("decimals", 2))
+        return {"possible": g.possible, "verdict": g.message}
     if name == "check_df_vs_n":
         d = check_df_vs_n(a["test"], a["df"], a["stated_n"])
         return {"note": "not applicable"} if d is None else {"consistent": d.consistent, "verdict": d.message}
     return {"error": f"unknown tool {name}"}
 
 
-def audit_agent_stream(paper_text: str, max_turns: int = 10):
+def audit_agent_stream(paper_text: str, max_turns: int = 16):
     """Yield events AS the agent works: status, each tool call, and the final
     narrative. This is what powers the live activity log in the web UI."""
     messages: list[dict] = [
@@ -97,6 +110,7 @@ def audit_agent_stream(paper_text: str, max_turns: int = 10):
         yield {"type": "status", "msg": f"Turn {turn + 1}: asking Qwen which checks to run..."}
         resp = client().chat.completions.create(
             model=LLM_MODEL, messages=messages, tools=TOOLS, temperature=0, seed=SEED)
+        log_usage(resp, tag="agent")
         msg = resp.choices[0].message
 
         if not msg.tool_calls:
@@ -124,7 +138,7 @@ def audit_agent_stream(paper_text: str, max_turns: int = 10):
     yield {"type": "done", "turns": max_turns}
 
 
-def audit_agent(paper_text: str, max_turns: int = 10, verbose: bool = False) -> dict:
+def audit_agent(paper_text: str, max_turns: int = 16, verbose: bool = False) -> dict:
     """Non-streaming wrapper (CLI + /api/agent): collects the stream into a result."""
     narrative, trace, turns = "", [], 0
     for ev in audit_agent_stream(paper_text, max_turns):

@@ -8,7 +8,7 @@ same verdicts Rigor's engine produces after the LLM extracts the numbers.
 """
 from __future__ import annotations
 
-from rigor.checks import check_pvalue, grim
+from rigor.checks import check_cohens_d, check_pvalue, grim, grimmer
 
 
 def line(title: str) -> None:
@@ -45,6 +45,25 @@ def main() -> None:
     g = grim(3.40, n=10, decimals=2)
     print(f"  mean = 3.40, N = 10")
     print(f"    -> {g.message}")
+
+    line("GRIMMER test (impossible standard deviations)")
+
+    # SD 0.50 is impossible for these 10 integer responses, even though the mean is fine
+    gm = grimmer(3.30, 0.50, n=10)
+    print(f"  mean = 3.30, SD = 0.50, N = 10")
+    print(f"    -> {gm.message}")
+
+    # a real integer sample's own mean+SD always survives
+    gm = grimmer(3.00, 1.00, n=3)
+    print(f"  mean = 3.00, SD = 1.00, N = 3")
+    print(f"    -> {gm.message}")
+
+    line("Effect-size consistency (Cohen's d vs t)")
+
+    # d reported ~2x too large for its t and group sizes
+    e = check_cohens_d(2.5, 1.40, n1=25, n2=25)
+    print(f"  t = 2.5, n1 = n2 = 25, reported d = 1.40")
+    print(f"    -> {e.message}")
 
     print("\nEvery verdict above came from arithmetic, not a language model.")
 
