@@ -30,3 +30,6 @@ Thumbs.db
 
 # Local hackathon rules dump (personal, not part of the product)
 Rules.md
+
+# Personal demo delivery notes (not part of the product)
+docs/demo-script.md
