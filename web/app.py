@@ -28,6 +28,7 @@ from slowapi.util import get_remote_address
 from rigor.agent import audit_agent, audit_agent_stream
 from rigor.audit import SAMPLE_PAPER, audit_text
 from rigor.ingest import load_text
+from rigor.llm import LLM_MODEL
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
 _log = logging.getLogger("rigor.audit")
@@ -59,6 +60,23 @@ def _log_audit(source: str, chars: int, result: dict, seconds: float) -> None:
 @app.get("/")
 def index() -> FileResponse:
     return FileResponse(STATIC / "index.html")
+
+
+@app.get("/health")
+def health() -> dict:
+    """Liveness probe. Used for uptime checks and to verify a deployment is serving."""
+    return {"status": "ok"}
+
+
+@app.get("/api/version")
+def version() -> dict:
+    """What this instance is running: the model and the checks it can apply. No secrets."""
+    return {
+        "name": "rigor",
+        "model": LLM_MODEL,
+        "commit": os.getenv("RIGOR_COMMIT", "unknown"),
+        "checks": ["statcheck", "grim", "grimmer", "df_vs_n", "effect_size", "claim_vs_evidence"],
+    }
 
 
 @app.get("/api/sample")

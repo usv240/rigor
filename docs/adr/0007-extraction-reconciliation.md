@@ -20,7 +20,7 @@ extracts the paper several times and reconciles the runs by majority vote:
   which filters out one-off misreads;
 - each surviving item carries a **support** ratio (how many runs agreed on it),
   surfaced in the UI as a per-finding confidence;
-- the report shows an overall **extraction agreement** — the mean support — a live,
+- the report shows an overall **extraction agreement**, the mean support, a live,
   honest number for how reliably the model read *this* paper.
 
 The verdicts are still exact math either way; this only concerns which numbers reach

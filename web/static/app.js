@@ -348,7 +348,7 @@ function rootCauseHtml(r) {
     </div>`).join("");
   return `<div class="rootcause">
     <div class="rc-head">Likely root cause
-      <i class="info" data-tip="Beyond flagging errors, Rigor searches for the single reported number whose correction resolves the most findings — verified by re-running the checks. A hypothesis for you to confirm, not a verdict.">i</i>
+      <i class="info" data-tip="Beyond flagging errors, Rigor searches for the single reported number whose correction resolves the most findings, verified by re-running the checks. A hypothesis for you to confirm, not a verdict.">i</i>
       <span class="rc-tag">which number to fix first</span>
     </div>${items}</div>`;
 }
@@ -357,7 +357,7 @@ function agreementNote(r) {
   const x = r.extraction;
   if (!x || !(x.samples > 1)) return "";
   return ` · ${Math.round(x.agreement * 100)}% extraction agreement (${x.samples} runs)`
-    + `<i class="info" data-tip="The math verdicts are always exact — only reading a messy PDF can vary. So Rigor read this paper ${x.samples} times and kept only the numbers the runs agreed on. Agreement is how often they matched: a live measure of how reliably it read the text.">i</i>`;
+    + `<i class="info" data-tip="The math verdicts are always exact; only reading a messy PDF can vary. So Rigor read this paper ${x.samples} times and kept only the numbers the runs agreed on. Agreement is how often they matched: a live measure of how reliably it read the text.">i</i>`;
 }
 
 function esc(s) {

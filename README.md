@@ -1,8 +1,8 @@
 # Rigor
 
 **An agent that automates the statistical-integrity screening step of the
-manuscript-submission workflow.** Point Rigor at a paper — or a whole submission
-queue — and it reads the prose, recomputes every p-value, mean, and standard
+manuscript-submission workflow.** Point Rigor at a paper, or a whole submission
+queue, and it reads the prose, recomputes every p-value, mean, and standard
 deviation with exact math, cross-checks the sample sizes, and flags where the
 claims overstate the numbers. The check that journals run by hand, or pay closed
 tools like Clear Skies for, done in seconds, open source, and available to the
@@ -44,7 +44,7 @@ effect-size checks use only necessary conditions, so a flag is never a false ala
 **Two benchmarks:**
 
 - **Deterministic core (no API key, instant, reproducible):** 530 injected-error
-  cases with ground truth by construction — **100% precision and recall across all
+  cases with ground truth by construction, **100% precision and recall across all
   five checks** (`python -m rigor.benchmark_checks`). This isolates and proves the
   math that produces every verdict.
 - **End-to-end (needs Qwen):** the full LLM-extraction + checks pipeline over a
@@ -54,7 +54,7 @@ effect-size checks use only necessary conditions, so a flag is never a false ala
 
 Because extraction is the only non-deterministic step, Rigor can run it several
 times and **reconcile the results by majority vote**, reporting a live *extraction
-agreement* score and a per-finding confidence — turning that one source of
+agreement* score and a per-finding confidence, turning that one source of
 uncertainty into a measured number (`RIGOR_EXTRACT_SAMPLES=3`).
 
 ## Beyond detection: it tells you *which number to fix*
@@ -63,10 +63,10 @@ Every other tool stops at "these numbers are inconsistent." Rigor goes one step
 further and **localizes the likely error**. A paper's statistics are an
 over-determined constraint system (N, df, statistic, p, mean, SD are all linked), so
 Rigor searches for the *single reported value whose correction resolves the most
-findings* — a minimum-repair search over that constraint graph
+findings*, a minimum-repair search over that constraint graph
 ([rigor/localize.py](rigor/localize.py)).
 
-On the demo paper it reports: *"One correction explains 2 findings — the stated
+On the demo paper it reports: *"One correction explains 2 findings, the stated
 sample size N=10 is the likely typo; every flagged test's df is consistent once
 N ≥ 49."* Each repair is **verified by re-running the checks**, and presented as a
 parsimony-ranked *hypothesis* for the reviewer, never a certainty. No other
@@ -166,7 +166,7 @@ Tools: `recompute_pvalue`, `grim_test`, `grimmer_test`, `df_vs_n`, `cohens_d`,
 ## Screen a manuscript on every commit (GitHub Action)
 
 Rigor ships a composite **GitHub Action** ([action.yml](action.yml)) so a lab or
-journal can drop integrity screening into CI — every push runs Rigor over the papers
+journal can drop integrity screening into CI, every push runs Rigor over the papers
 in the repo, uploads a CSV/JSON report, and can fail the build if any paper scores
 below a threshold:
 
@@ -180,8 +180,8 @@ below a threshold:
 
 This is the editorial-workflow shape as infrastructure: the same batch engine
 (`rigor batch`, [rigor/batch.py](rigor/batch.py)) that triages a submission queue,
-wired to run automatically. We ran it over **26 real published papers** in one pass —
-including an honest account of extraction variance on long PDFs — in
+wired to run automatically. We ran it over **26 real published papers** in one pass, 
+including an honest account of extraction variance on long PDFs, in
 [docs/corpus-run.md](docs/corpus-run.md).
 
 ## Architecture
