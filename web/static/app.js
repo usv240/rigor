@@ -124,6 +124,9 @@ function analysisHtml(r) {
       <div class="an-tile${m.decision_errors ? " warn" : ""}"><div class="an-n">${m.decision_errors}</div><div class="an-l">serious enough to change a conclusion</div></div>
     </div>
     <div class="an-verdict">${esc(m.verdict)}</div>
+    ${m.checks_run ? `<div class="an-time">Checking these ${m.checks_run} value${m.checks_run !== 1 ? "s" : ""} by hand would take about <b>${m.manual_minutes} min</b>${r.seconds != null ? `. Rigor did it in <b>${r.seconds}s</b>` : ""}.
+      <i class="info" data-tip="A conservative estimate: about ${m.min_per_check} minutes to find and hand-recompute one statistic (locate the test, read the degrees of freedom, look up the distribution, compare). Shown so the assumption is in the open.">i</i>
+    </div>` : ""}
   </div>`;
 }
 
@@ -325,6 +328,7 @@ function downloadReport(r) {
       + (dismissed.size ? ` (${dismissed.size} dismissed by reviewer)` : ""),
     `- Checked: ${r.n_tests} test(s), ${r.n_means} mean(s)`,
     ...(r.metrics && r.metrics.results_checked ? [`- Vs field: ${r.metrics.verdict}`] : []),
+    ...(r.metrics && r.metrics.checks_run ? [`- Time: a hand recheck of ${r.metrics.checks_run} value(s) would take about ${r.metrics.manual_minutes} min${r.seconds != null ? `; Rigor took ${r.seconds}s` : ""}`] : []),
     "",
   ];
   const groups = { ERROR: "Errors", WARNING: "To review", OK: "Clean" };

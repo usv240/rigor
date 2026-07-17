@@ -13,6 +13,12 @@ wherever shown.
 """
 from __future__ import annotations
 
+# A conservative estimate of how long it takes a person to locate one statistic in a
+# paper and recompute it by hand: find the test, read off the degrees of freedom, look
+# up the distribution, compute the p-value, and compare. Used only to estimate time
+# saved, and always displayed WITH this assumption visible so the number is honest.
+MANUAL_MIN_PER_CHECK = 3
+
 FIELD_BASELINE = {
     "source": "Nuijten et al. 2016 (statcheck over ~250,000 p-values in ~16,700 papers)",
     "citation": "Nuijten et al. 2016, Behavior Research Methods 48:1205-1226",

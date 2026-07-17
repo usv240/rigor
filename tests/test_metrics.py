@@ -24,6 +24,9 @@ def test_metrics_rates_and_counts():
     assert m["decision_errors"] == 1
     assert m["impossible_values"] == 1
     assert "above" in m["verdict"]  # 40% is above the ~10% field average
+    # time saved: (5 tests + 1 mean) * 3 min per check
+    assert m["checks_run"] == 6
+    assert m["manual_minutes"] == 18
 
 
 def test_metrics_clean_paper_reads_below_average():

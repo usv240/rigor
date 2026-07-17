@@ -93,7 +93,9 @@ def api_audit(request: Request, body: AuditIn) -> JSONResponse:
     except Exception as exc:  # noqa: BLE001 - surface a real message to the UI
         return JSONResponse(status_code=502, content={"error": f"{type(exc).__name__}: {exc}"})
     result["source"] = "pasted text"
-    _log_audit("text", len(body.text), result, time.time() - t0)
+    elapsed = time.time() - t0
+    result["seconds"] = round(elapsed, 1)
+    _log_audit("text", len(body.text), result, elapsed)
     return JSONResponse(result)
 
 
@@ -145,5 +147,7 @@ async def api_audit_pdf(request: Request, file: UploadFile = File(...)) -> JSONR
             except OSError:
                 pass
     result["source"] = file.filename
-    _log_audit(file.filename or "pdf", len(text), result, time.time() - t0)
+    elapsed = time.time() - t0
+    result["seconds"] = round(elapsed, 1)
+    _log_audit(file.filename or "pdf", len(text), result, elapsed)
     return JSONResponse(result)

@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
-from rigor.baseline import FIELD_BASELINE
+from rigor.baseline import FIELD_BASELINE, MANUAL_MIN_PER_CHECK
 
 
 class Severity(str, Enum):
@@ -87,12 +87,20 @@ class AuditReport:
             verdict = (f"{len(inconsistent)} of {checked} p-values inconsistent ({rate:.0%}), "
                        f"{cmp} the field average of about 1 in 10 (Nuijten 2016).")
 
+        # Time a manual recheck would take: every recomputable stat and every mean is a
+        # value a human would have to find and recompute by hand.
+        checks_run = self.n_tests + self.n_means
+        manual_minutes = checks_run * MANUAL_MIN_PER_CHECK
+
         return {
             "results_checked": checked,
             "inconsistent": len(inconsistent),
             "inconsistent_rate": round(rate, 3) if rate is not None else None,
             "decision_errors": len(decision),
             "impossible_values": len(impossible),
+            "checks_run": checks_run,
+            "manual_minutes": manual_minutes,
+            "min_per_check": MANUAL_MIN_PER_CHECK,
             "baseline": FIELD_BASELINE,
             "verdict": verdict,
         }
@@ -132,6 +140,10 @@ class AuditReport:
         m = self.metrics()
         if m["results_checked"]:
             lines.append(f"  vs field        : {m['verdict']}")
+        if m["checks_run"]:
+            lines.append(
+                f"  time            : a hand recheck of {m['checks_run']} value(s) would take "
+                f"about {m['manual_minutes']} min")
         lines.append("=" * 68)
 
         def block(title: str, items: list[Finding]) -> None:

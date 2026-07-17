@@ -229,6 +229,8 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
 .an-l{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.35}
 .an-verdict{font-size:13px;color:var(--text);margin-top:12px;padding-top:11px;
   border-top:1px solid var(--line);line-height:1.5}
+.an-time{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.5}
+.an-time b{color:var(--accent)}
 @media (max-width:560px){.an-grid{grid-template-columns:1fr}}
 
 /* ---- agent activity (live stream) ---- */
