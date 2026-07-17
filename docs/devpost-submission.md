@@ -13,6 +13,9 @@ An agent that automates the statistical-integrity screening step of manuscript s
 ## Track
 Track 4: Autopilot Agent
 
+## Team
+Ujwal Suresh Vanjare and Arpita Madhukar Kalburgi
+
 ## Inspiration
 About half of published psychology papers contain at least one statistical
 inconsistency, and roughly one in seven of those would flip the paper's

@@ -114,9 +114,20 @@ function analysisHtml(r) {
   if (!m || !m.results_checked) return "";
   const rate = m.inconsistent_rate != null ? Math.round(m.inconsistent_rate * 100) + "%" : "n/a";
   const base = Math.round((m.baseline.pvalues_inconsistent || 0.1) * 100);
+
+  // Impact: synthesise the "so what" from computed numbers only, no unsourced claims.
+  const errClause = r.errors
+    ? `caught <b>${r.errors} error${r.errors !== 1 ? "s" : ""}</b>${m.decision_errors ? `, <b>${m.decision_errors}</b> serious enough to change a conclusion` : ""}`
+    : `found no provable errors`;
+  const rcClause = (r.hypotheses && r.hypotheses.length) ? ", pinpointed the number most likely at fault," : "";
+  const timeClause = `did in <b>${r.seconds != null ? r.seconds + "s" : "seconds"}</b> what a hand check of ${m.checks_run} value${m.checks_run !== 1 ? "s" : ""} would take about <b>${m.manual_minutes} min</b> to do`;
+
   return `<div class="analysis">
     <div class="an-head">This paper, measured against the field
       <i class="info" data-tip="Your paper's own numbers next to the published baseline from Nuijten et al. (2016), who ran statcheck over about 250,000 p-values in roughly 16,700 papers. The left figure is computed from this audit; the middle is cited.">i</i>
+    </div>
+    <div class="an-impact"><b>Impact:</b> Rigor ${errClause}${rcClause} and ${timeClause}.
+      <i class="info" data-tip="Every figure here is computed from this audit. The time estimate assumes about ${m.min_per_check} minutes to find and hand-recompute one statistic (locate the test, read the degrees of freedom, look up the distribution, compare).">i</i>
     </div>
     <div class="an-grid">
       <div class="an-tile"><div class="an-n">${rate}</div><div class="an-l">of this paper's ${m.results_checked} p-value${m.results_checked !== 1 ? "s" : ""} inconsistent</div></div>
@@ -124,9 +135,6 @@ function analysisHtml(r) {
       <div class="an-tile${m.decision_errors ? " warn" : ""}"><div class="an-n">${m.decision_errors}</div><div class="an-l">serious enough to change a conclusion</div></div>
     </div>
     <div class="an-verdict">${esc(m.verdict)}</div>
-    ${m.checks_run ? `<div class="an-time">Checking these ${m.checks_run} value${m.checks_run !== 1 ? "s" : ""} by hand would take about <b>${m.manual_minutes} min</b>${r.seconds != null ? `. Rigor did it in <b>${r.seconds}s</b>` : ""}.
-      <i class="info" data-tip="A conservative estimate: about ${m.min_per_check} minutes to find and hand-recompute one statistic (locate the test, read the degrees of freedom, look up the distribution, compare). Shown so the assumption is in the open.">i</i>
-    </div>` : ""}
   </div>`;
 }
 
