@@ -216,6 +216,21 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
   margin-bottom:16px;font-size:13px;color:var(--muted)}
 .reviewbar .kept{font-weight:700;color:var(--accent);white-space:nowrap}
 
+/* ---- this-paper-vs-field analysis ---- */
+.analysis{background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:14px 16px;margin-bottom:16px}
+.an-head{display:flex;align-items:center;gap:8px;font-weight:800;font-size:14px;margin-bottom:12px}
+.an-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.an-tile{background:var(--bg);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;text-align:center}
+.an-n{font-size:24px;font-weight:800;line-height:1.1;color:var(--accent)}
+.an-tile.ref .an-n{color:var(--muted)}
+.an-tile.warn .an-n{color:#ef4444}
+.an-l{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.35}
+.an-verdict{font-size:13px;color:var(--text);margin-top:12px;padding-top:11px;
+  border-top:1px solid var(--line);line-height:1.5}
+@media (max-width:560px){.an-grid{grid-template-columns:1fr}}
+
 /* ---- agent activity (live stream) ---- */
 .agentcard{background:linear-gradient(180deg,#fbfbff,#f4f6ff);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:20px}
 .ahead{font-weight:700;font-size:15px;margin-bottom:12px}

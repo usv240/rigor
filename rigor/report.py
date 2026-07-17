@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 
+from rigor.baseline import FIELD_BASELINE
+
 
 class Severity(str, Enum):
     ERROR = "ERROR"      # decision-flipping inconsistency or impossible value
@@ -60,6 +62,41 @@ class AuditReport:
         penalty = sum(f.weight for f in self.findings)
         return max(0, round(100 - penalty * 5))
 
+    def metrics(self) -> dict:
+        """This paper's numbers measured against the published field baseline, so the
+        result has a reference point. Everything here is COMPUTED from this audit or
+        CITED from Nuijten 2016 - never asserted."""
+        pvals = [f for f in self.findings if f.kind == "pvalue"]
+        checked = self.n_tests
+        inconsistent = [f for f in pvals if f.severity is not Severity.OK]
+        decision = [f for f in pvals if f.severity is Severity.ERROR]
+        impossible = [
+            f for f in self.findings
+            if f.kind in ("grim", "grimmer") and f.severity is Severity.ERROR
+        ]
+        rate = (len(inconsistent) / checked) if checked else None
+        base = FIELD_BASELINE["pvalues_inconsistent"]
+
+        if rate is None:
+            verdict = "No recomputable p-values were found to compare against the field."
+        elif not inconsistent:
+            verdict = (f"Clean: 0 of {checked} p-values inconsistent, below the field "
+                       f"average of about 1 in 10 (Nuijten 2016).")
+        else:
+            cmp = "above" if rate > base else "in line with"
+            verdict = (f"{len(inconsistent)} of {checked} p-values inconsistent ({rate:.0%}), "
+                       f"{cmp} the field average of about 1 in 10 (Nuijten 2016).")
+
+        return {
+            "results_checked": checked,
+            "inconsistent": len(inconsistent),
+            "inconsistent_rate": round(rate, 3) if rate is not None else None,
+            "decision_errors": len(decision),
+            "impossible_values": len(impossible),
+            "baseline": FIELD_BASELINE,
+            "verdict": verdict,
+        }
+
     def to_dict(self) -> dict:
         return {
             "score": self.score(),
@@ -69,6 +106,7 @@ class AuditReport:
             "warnings": len(self.warnings),
             "skipped": self.skipped,
             "extraction": self.extraction,
+            "metrics": self.metrics(),
             "hypotheses": [h.to_dict() for h in self.hypotheses],
             "findings": [f.to_dict() for f in self.findings],
         }
@@ -91,6 +129,9 @@ class AuditReport:
             lines.append(
                 f"  extraction      : {self.extraction['samples']} runs reconciled, "
                 f"{self.extraction['agreement']:.0%} agreement")
+        m = self.metrics()
+        if m["results_checked"]:
+            lines.append(f"  vs field        : {m['verdict']}")
         lines.append("=" * 68)
 
         def block(title: str, items: list[Finding]) -> None:

@@ -107,6 +107,26 @@ function card(f, i) {
   </div>`;
 }
 
+function analysisHtml(r) {
+  // This paper's own numbers next to the published field baseline. Every figure is
+  // either computed from this audit or cited (Nuijten 2016). No unsourced claims.
+  const m = r.metrics;
+  if (!m || !m.results_checked) return "";
+  const rate = m.inconsistent_rate != null ? Math.round(m.inconsistent_rate * 100) + "%" : "n/a";
+  const base = Math.round((m.baseline.pvalues_inconsistent || 0.1) * 100);
+  return `<div class="analysis">
+    <div class="an-head">This paper, measured against the field
+      <i class="info" data-tip="Your paper's own numbers next to the published baseline from Nuijten et al. (2016), who ran statcheck over about 250,000 p-values in roughly 16,700 papers. The left figure is computed from this audit; the middle is cited.">i</i>
+    </div>
+    <div class="an-grid">
+      <div class="an-tile"><div class="an-n">${rate}</div><div class="an-l">of this paper's ${m.results_checked} p-value${m.results_checked !== 1 ? "s" : ""} inconsistent</div></div>
+      <div class="an-tile ref"><div class="an-n">~${base}%</div><div class="an-l">field average, inconsistent p-values (Nuijten 2016)</div></div>
+      <div class="an-tile${m.decision_errors ? " warn" : ""}"><div class="an-n">${m.decision_errors}</div><div class="an-l">serious enough to change a conclusion</div></div>
+    </div>
+    <div class="an-verdict">${esc(m.verdict)}</div>
+  </div>`;
+}
+
 function render(r) {
   lastR = r;
   dismissed = new Set();
@@ -155,6 +175,7 @@ function render(r) {
         </div>
       </div>
     </div>
+    ${analysisHtml(r)}
     <div class="chips">
       <button class="chip active" data-f="all">All ${r.findings.length}</button>
       <button class="chip" data-f="ERROR">Errors ${r.errors}</button>
@@ -303,6 +324,7 @@ function downloadReport(r) {
     `- ${c.ERROR} error(s), ${c.WARNING} to review, ${c.OK} clean`
       + (dismissed.size ? ` (${dismissed.size} dismissed by reviewer)` : ""),
     `- Checked: ${r.n_tests} test(s), ${r.n_means} mean(s)`,
+    ...(r.metrics && r.metrics.results_checked ? [`- Vs field: ${r.metrics.verdict}`] : []),
     "",
   ];
   const groups = { ERROR: "Errors", WARNING: "To review", OK: "Clean" };
