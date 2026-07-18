@@ -93,7 +93,7 @@ function card(f, i) {
   // Collapsed by default: header + one-line meaning + the key numbers stay visible;
   // "The math" and "What to do" expand on click, so 14 findings scan in one screen.
   return `<div class="finding sev-${f.severity}" data-sev="${f.severity}" data-id="${f._id}"
-      style="border-left-color:${s.color};animation-delay:${i * 35}ms">
+      style="border-left-color:${s.color};animation-delay:${420 + i * 35}ms">
     <div class="frow fhead">
       <span class="badge" style="background:${s.color}">${s.label}</span>
       <span class="claimline">${esc(f.claim) || "<span class='muted'>(statistic)</span>"}</span>
@@ -205,6 +205,12 @@ function render(r) {
     <div id="agentbox"></div>`;
 
   report.classList.remove("hidden");
+  // Progressive reveal: let the summary land in sequence before the findings cascade,
+  // so a first-time viewer is guided through it instead of hit with everything at once.
+  ["scorecard", "analysis", "chips", "rootcause", "reviewbar"].forEach((cls, i) => {
+    const el = report.querySelector("." + cls);
+    if (el) { el.classList.add("reveal"); el.style.animationDelay = (i * 90) + "ms"; }
+  });
   report.querySelectorAll(".chip").forEach(ch => ch.addEventListener("click", () => {
     report.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
     ch.classList.add("active");

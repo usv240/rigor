@@ -148,6 +148,11 @@ textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba
 .finding{background:#fff;border:1px solid var(--line);border-left-width:4px;border-radius:12px;
   padding:14px 16px;margin:10px 0;opacity:0;transform:translateY(8px);animation:rise .4s forwards}
 @keyframes rise{to{opacity:1;transform:none}}
+/* Progressive reveal for the summary sections (score, impact, comparison, root cause). */
+.reveal{opacity:0;transform:translateY(8px);animation:rise .4s forwards}
+@media (prefers-reduced-motion:reduce){
+  .finding,.reveal,.aline{animation:none;opacity:1;transform:none}
+}
 .finding .badge{color:#fff;font-size:10.5px;font-weight:800;padding:3px 9px;border-radius:20px;letter-spacing:.03em}
 .finding .kind{font-size:10.5px;font-weight:700;color:var(--muted);background:#f0f1f6;padding:3px 9px;border-radius:20px;margin-left:6px;text-transform:uppercase;letter-spacing:.04em}
 .finding .claim{font-weight:600;margin:8px 0 6px}
