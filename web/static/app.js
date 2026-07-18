@@ -126,13 +126,13 @@ function analysisHtml(r) {
     <div class="an-head">This paper, measured against the field
       <i class="info" data-tip="Your paper's own numbers next to the published baseline from Nuijten et al. (2016), who ran statcheck over about 250,000 p-values in roughly 16,700 papers. The left figure is computed from this audit; the middle is cited.">i</i>
     </div>
-    <div class="an-impact"><b>Impact:</b> Rigor ${errClause}${rcClause} and ${timeClause}.
+    <div class="an-impact"><span class="an-badge">Impact</span>Rigor ${errClause}${rcClause} and ${timeClause}.
       <i class="info" data-tip="Every figure here is computed from this audit. The time estimate assumes about ${m.min_per_check} minutes to find and hand-recompute one statistic (locate the test, read the degrees of freedom, look up the distribution, compare).">i</i>
     </div>
     <div class="an-grid">
       <div class="an-tile"><div class="an-n">${rate}</div><div class="an-l">of this paper's ${m.results_checked} p-value${m.results_checked !== 1 ? "s" : ""} inconsistent</div></div>
       <div class="an-tile ref"><div class="an-n">~${base}%</div><div class="an-l">field average, inconsistent p-values (Nuijten 2016)</div></div>
-      <div class="an-tile${m.decision_errors ? " warn" : ""}"><div class="an-n">${m.decision_errors}</div><div class="an-l">serious enough to change a conclusion</div></div>
+      <div class="an-tile${m.decision_errors ? " warn" : ""}"><div class="an-n">${m.decision_errors}</div><div class="an-l">conclusion-changing error${m.decision_errors !== 1 ? "s" : ""} here</div></div>
     </div>
     <div class="an-verdict">${esc(m.verdict)}</div>
   </div>`;

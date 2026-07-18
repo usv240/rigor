@@ -229,9 +229,13 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
 .an-l{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.35}
 .an-verdict{font-size:13px;color:var(--text);margin-top:12px;padding-top:11px;
   border-top:1px solid var(--line);line-height:1.5}
-.an-impact{font-size:13.5px;line-height:1.55;background:var(--bg);border-left:3px solid var(--accent);
-  border-radius:8px;padding:10px 13px;margin-bottom:12px}
+.an-impact{font-size:13.5px;line-height:1.6;background:linear-gradient(180deg,#eef1ff,#f7f9ff);
+  border:1px solid #d8dffb;border-left:3px solid var(--accent);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px}
 .an-impact b{color:var(--accent);font-weight:800}
+.an-badge{display:inline-block;background:var(--accent);color:#fff;font-size:10.5px;font-weight:800;
+  letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px;margin-right:8px}
+[data-theme="dark"] .an-impact{background:linear-gradient(180deg,#16203a,#121a2e);border-color:#2a3757}
 @media (max-width:560px){.an-grid{grid-template-columns:1fr}}
 
 /* ---- agent activity (live stream) ---- */
