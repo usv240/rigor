@@ -18,6 +18,7 @@ from rigor.checks import check_df_vs_n, check_pvalue, grim, grimmer
 from rigor.claims import analyze_claims
 from rigor.explain import explain_claim, explain_dfn, explain_grim, explain_grimmer, explain_pvalue
 from rigor.extract import extract
+from rigor.llm import strip_dashes
 from rigor.ingest import load_text
 from rigor.localize import localize
 from rigor.report import AuditReport, Finding, Severity
@@ -216,6 +217,11 @@ def audit_text(text: str) -> AuditReport:
                 weight=1.5 if grounded else 0.4,
             )
         )
+
+    # House style: strip em dashes from any rendered text, including paper-quoted claims
+    # (the deterministic detail/plain/fix strings never contain them).
+    for f in report.findings:
+        f.claim = strip_dashes(f.claim)
 
     # De-duplicate identical findings (e.g. one sentence reporting several identical stats).
     seen, unique = set(), []

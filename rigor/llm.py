@@ -77,6 +77,18 @@ def chat(messages: list[dict], model: str | None = None, temperature: float = 0.
     return resp.choices[0].message.content or ""
 
 
+def strip_dashes(s: str) -> str:
+    """House style: no em dashes anywhere Rigor renders, including model-written prose.
+    The LLM sometimes emits em/en dashes in its explanations; normalise them before the
+    text ever reaches the report. Em dash becomes a comma; en dash becomes a hyphen."""
+    if not s:
+        return s
+    s = s.replace(" - ", " - ")  # keep spaced hyphens as-is
+    s = s.replace(" — ", ", ").replace("—", ", ")   # em dash
+    s = s.replace(" – ", ", ").replace("–", "-")     # en dash
+    return s.replace("  ", " ").replace(" ,", ",")
+
+
 def ping() -> str:
     """Quick connectivity check: returns the model's reply to a trivial prompt."""
     return chat([{"role": "user", "content": "Reply with exactly: pong"}])

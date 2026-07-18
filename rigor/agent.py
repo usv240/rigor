@@ -20,7 +20,7 @@ import sys
 
 from rigor.checks import check_df_vs_n, check_pvalue, grim, grimmer
 from rigor.ingest import load_text
-from rigor.llm import LLM_MODEL, SEED, client, log_usage
+from rigor.llm import LLM_MODEL, SEED, client, log_usage, strip_dashes
 
 SYSTEM = """You are Rigor, a research-integrity auditor AGENT. You are given a \
 paper's text. Work in steps:
@@ -115,7 +115,7 @@ def audit_agent_stream(paper_text: str, max_turns: int = 16):
 
         if not msg.tool_calls:
             messages.append({"role": "assistant", "content": msg.content or ""})
-            yield {"type": "narrative", "text": msg.content or ""}
+            yield {"type": "narrative", "text": strip_dashes(msg.content or "")}
             yield {"type": "done", "turns": turn + 1}
             return
 

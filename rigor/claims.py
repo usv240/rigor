@@ -15,7 +15,7 @@ review - honestly separated from the hard, provable findings.
 from __future__ import annotations
 
 from rigor.extract import _extract_json
-from rigor.llm import chat
+from rigor.llm import chat, strip_dashes
 
 SYSTEM = """You audit scientific CLAIMS against their statistical evidence.
 
@@ -49,4 +49,12 @@ def analyze_claims(paper_text: str, verified_results: list[str]) -> list[dict]:
     raw = chat([{"role": "system", "content": SYSTEM}, {"role": "user", "content": user}])
     data = _extract_json(raw)
     claims = data.get("claims", [])
-    return claims if isinstance(claims, list) else []
+    if not isinstance(claims, list):
+        return []
+    # Normalise model-written prose to house style (no em dashes) before it is rendered.
+    for c in claims:
+        if isinstance(c, dict):
+            for k in ("claim", "explanation"):
+                if isinstance(c.get(k), str):
+                    c[k] = strip_dashes(c[k])
+    return claims
