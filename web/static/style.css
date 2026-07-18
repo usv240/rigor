@@ -242,13 +242,17 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
   letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px;margin-right:8px}
 [data-theme="dark"] .an-impact{background:linear-gradient(180deg,#16203a,#121a2e);border-color:#2a3757}
 
-/* Corpus scale-impact claim (home page) */
-.corpus-claim{margin-top:24px;background:linear-gradient(120deg,#eef1ff,#eafcff);
-  border:1px solid #d8dffb;border-radius:14px;padding:22px 24px;text-align:center}
-.cc-big{font-size:clamp(20px,3vw,27px);font-weight:800;letter-spacing:-.01em;margin-bottom:8px}
-.corpus-claim p{max-width:760px;margin:0 auto;color:var(--muted);font-size:14px;line-height:1.6}
-.corpus-claim a{color:var(--accent);font-weight:600}
-[data-theme="dark"] .corpus-claim{background:linear-gradient(120deg,#16203a,#0f2436);border-color:#2a3757}
+/* Corpus scale-impact claim (home page) - the hero stat, styled to stand out */
+.corpus-claim{margin-top:28px;background:linear-gradient(120deg,#eef1ff,#eafcff);
+  border:1px solid #cdd7fb;border-top:4px solid var(--accent);border-radius:16px;
+  padding:28px 26px;text-align:center;box-shadow:0 10px 30px rgba(79,70,229,.12)}
+.cc-tag{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:12px}
+.cc-big{font-size:clamp(23px,3.6vw,34px);font-weight:800;letter-spacing:-.015em;line-height:1.2;margin-bottom:10px}
+.corpus-claim p{max-width:780px;margin:0 auto;color:var(--muted);font-size:14px;line-height:1.6}
+.corpus-claim a{color:var(--accent);font-weight:700}
+[data-theme="dark"] .corpus-claim{background:linear-gradient(120deg,#16203a,#0f2436);
+  border-color:#2a3757;border-top-color:var(--accent);box-shadow:0 10px 30px rgba(0,0,0,.35)}
 
 /* One-click example-paper picker */
 .samples{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:10px}
