@@ -28,7 +28,30 @@ const SORT = { ERROR: 0, WARNING: 1, OK: 2 };
 let dismissed = new Set();  // finding ids the human reviewer has dismissed
 let lastR = null;
 
-fetch("/api/sample").then(r => r.json()).then(d => { paper.value = d.text; }).catch(() => {});
+// One-click example papers (all synthetic; real papers are copyrighted, so we link
+// those by DOI instead of hosting them).
+fetch("/api/samples").then(r => r.json()).then(d => {
+  const box = document.getElementById("samples");
+  if (!box || !d.samples || !d.samples.length) return;
+  d.samples.forEach((s, i) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "samplebtn" + (i === 0 ? " active" : "");
+    b.textContent = s.label;
+    b.title = s.note;
+    b.addEventListener("click", () => {
+      paper.value = s.text;
+      box.querySelectorAll(".samplebtn").forEach(x => x.classList.remove("active"));
+      b.classList.add("active");
+      report.classList.add("hidden");
+      document.getElementById("hint").textContent = s.note;
+    });
+    box.appendChild(b);
+  });
+  if (!paper.value) paper.value = d.samples[0].text;  // load the first by default
+}).catch(() => {
+  fetch("/api/sample").then(r => r.json()).then(d => { paper.value = d.text; }).catch(() => {});
+});
 pdfInput.addEventListener("change", () => {
   hint.textContent = pdfInput.files[0] ? pdfInput.files[0].name : "";
 });

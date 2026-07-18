@@ -84,6 +84,13 @@ def sample() -> dict:
     return {"text": SAMPLE_PAPER}
 
 
+@app.get("/api/samples")
+def samples() -> dict:
+    """The one-click example papers for the web tool (all synthetic, see rigor/samples.py)."""
+    from rigor.samples import SAMPLES
+    return {"samples": SAMPLES}
+
+
 @app.post("/api/audit")
 @limiter.limit("10/minute")
 def api_audit(request: Request, body: AuditIn) -> JSONResponse:

@@ -108,6 +108,9 @@
       <h3>Paper text
         <i class="info" data-tip="Rigor works best on the Results section, where the test statistics live (e.g. t(48)=1.90, p<.001). It also accepts full-paper PDFs.">i</i>
       </h3>
+      <div class="samples" id="samples">
+        <span class="samples-lbl">Try an example:</span>
+      </div>
       <textarea id="paper" placeholder="Paste paper text here..."></textarea>
       <div class="toolbar">
         <button class="btn btn-primary" id="run">Check integrity</button>
@@ -153,6 +156,14 @@
            number in a vacuum: this paper's rate against the field's average.</p>
         <div class="ex">example: this paper <span class="r">67%</span> inconsistent<br>vs field <span class="g">~10%</span> (Nuijten 2016)</div>
       </div>
+    </div>
+    <div class="corpus-claim">
+      <div class="cc-big">About 3 hours by hand. <span class="g">Under 6 minutes with Rigor.</span></div>
+      <p>We ran Rigor over <b>26 real published papers</b> in a single pass. Recomputing all
+         62 reported statistics by hand, at about three minutes each, is roughly <b>3 hours</b> of
+         checking. Rigor did it in <b>5.9 minutes</b> and narrowed the stack to the <b>3 papers</b>
+         that needed a human look, ranking the one we had independently verified worst of all.
+         <a href="https://github.com/usv240/rigor/blob/main/docs/corpus-run.md" target="_blank">See the full run.</a></p>
     </div>
   </div>
 </section>
