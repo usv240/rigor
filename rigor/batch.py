@@ -17,9 +17,11 @@ import argparse
 import csv
 import json
 import sys
+import time
 from pathlib import Path
 
 from rigor.audit import audit_text
+from rigor.baseline import MANUAL_MIN_PER_CHECK
 from rigor.ingest import load_text
 
 SUFFIXES = {".pdf", ".txt", ".md"}
@@ -34,6 +36,7 @@ def audit_folder(folder: str | Path) -> list[dict]:
     rows: list[dict] = []
     for path in files:
         row: dict = {"file": path.name}
+        t0 = time.time()
         try:
             report = audit_text(load_text(path)).to_dict()
             row.update({
@@ -42,23 +45,47 @@ def audit_folder(folder: str | Path) -> list[dict]:
                 "warnings": report["warnings"],
                 "tests": report["n_tests"],
                 "means": report["n_means"],
+                "values": report["n_tests"] + report["n_means"],
                 "root_causes": len(report.get("hypotheses", [])),
                 "agreement": report.get("extraction", {}).get("agreement", 1.0),
+                "seconds": round(time.time() - t0, 1),
                 "status": "ok",
             })
         except Exception as exc:  # noqa: BLE001 - one bad file shouldn't sink the batch
             row.update({"score": None, "errors": None, "warnings": None, "tests": None,
-                        "means": None, "root_causes": None, "agreement": None,
-                        "status": f"error: {type(exc).__name__}"})
+                        "means": None, "values": None, "root_causes": None, "agreement": None,
+                        "seconds": round(time.time() - t0, 1), "status": f"error: {type(exc).__name__}"})
         rows.append(row)
     # worst (lowest score) first; failed files sink to the bottom
     rows.sort(key=lambda r: (r["score"] is None, r["score"] if r["score"] is not None else 0))
     return rows
 
 
+def impact_summary(rows: list[dict]) -> dict:
+    """Aggregate scale-impact across the batch: the time a hand check of every statistic
+    would take (values x a conservative ~3 min each) against Rigor's actual runtime.
+    Honest by construction: it counts only the statistics Rigor actually checked."""
+    ok = [r for r in rows if r.get("status") == "ok"]
+    papers = len(ok)
+    values = sum(r.get("values") or 0 for r in ok)
+    flagged = sum(1 for r in ok if (r.get("errors") or 0) > 0)
+    actual_seconds = round(sum(r.get("seconds") or 0 for r in rows), 1)
+    manual_minutes = values * MANUAL_MIN_PER_CHECK
+    return {
+        "papers_screened": papers,
+        "papers_flagged": flagged,
+        "statistics_checked": values,
+        "manual_minutes": manual_minutes,
+        "manual_hours": round(manual_minutes / 60, 1),
+        "rigor_seconds": actual_seconds,
+        "rigor_minutes": round(actual_seconds / 60, 1),
+        "min_per_check": MANUAL_MIN_PER_CHECK,
+    }
+
+
 def write_csv(rows: list[dict], path: str | Path) -> None:
-    cols = ["file", "score", "errors", "warnings", "tests", "means", "root_causes",
-            "agreement", "status"]
+    cols = ["file", "score", "errors", "warnings", "tests", "means", "values", "root_causes",
+            "agreement", "seconds", "status"]
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=cols)
         w.writeheader()
@@ -92,11 +119,22 @@ def main(argv: list[str]) -> int:
         print(f"  {score}  {str(r['errors'] if r['errors'] is not None else '-'):>3} "
               f"{str(r['warnings'] if r['warnings'] is not None else '-'):>4}  {agree}  {r['file']}")
 
+    imp = impact_summary(rows)
+    if imp["statistics_checked"]:
+        rigor_t = (f"{imp['rigor_minutes']} min" if imp["rigor_seconds"] >= 120
+                   else f"{imp['rigor_seconds']} s")
+        print(f"\n  Impact at scale: screening these {imp['papers_screened']} papers by hand, "
+              f"recomputing all {imp['statistics_checked']} reported statistics at about "
+              f"{imp['min_per_check']} min each, is roughly {imp['manual_hours']} hours of work. "
+              f"Rigor did it in {rigor_t}, and flagged the {imp['papers_flagged']} papers that need "
+              f"a human look.")
+
     if args.csv:
         write_csv(rows, args.csv)
         print(f"\n  CSV  -> {args.csv}")
     if args.json:
-        Path(args.json).write_text(json.dumps(rows, indent=2), encoding="utf-8")
+        Path(args.json).write_text(
+            json.dumps({"impact": imp, "papers": rows}, indent=2), encoding="utf-8")
         print(f"  JSON -> {args.json}")
 
     if args.min_score is not None:

@@ -180,9 +180,11 @@ below a threshold:
 
 This is the editorial-workflow shape as infrastructure: the same batch engine
 (`rigor batch`, [rigor/batch.py](rigor/batch.py)) that triages a submission queue,
-wired to run automatically. We ran it over **26 real published papers** in one pass, 
-including an honest account of extraction variance on long PDFs, in
-[docs/corpus-run.md](docs/corpus-run.md).
+wired to run automatically. We ran it over **26 real published papers** in one pass:
+**roughly 3.1 hours of hand-checking (62 statistics) done in 5.9 minutes, and 26
+papers triaged down to the 3 that need a human look.** The worst-ranked paper was
+the one we had independently verified. Full write-up, including an honest account of
+extraction variance on long PDFs, in [docs/corpus-run.md](docs/corpus-run.md).
 
 ## Architecture
 

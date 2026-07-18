@@ -84,6 +84,10 @@ synthesises whether the errors are systematic.
 - A **verified real-world catch**: on a published Geology paper (Eppes et al., 2018),
   Rigor flagged a correlation across only four rock types claiming p < .05 that
   recomputes to about .08 - confirmed against the paper's own methods.
+- **Scale impact on a real corpus**: screened 26 published papers in one automated
+  pass, roughly 3.1 hours of hand-checking (62 statistics) compressed into under 6
+  minutes and triaged down to the 3 that need a human look - and the paper it ranked
+  worst was the one we had independently verified.
 - A genuine **Qwen tool-calling agent**, an **MCP server**, and a **live deployment
   on Alibaba Cloud**.
 
