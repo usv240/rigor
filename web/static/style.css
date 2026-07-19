@@ -265,12 +265,17 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
 .pdf-examples a{color:var(--accent);font-weight:600}
 .pdf-note{display:block;font-size:12px;opacity:.85;margin-top:2px}
 
-/* "Not a wrapper" proof callout */
-.proof-box{margin-top:24px;background:linear-gradient(120deg,#eef1ff,#eafcff);border:1px solid #cdd7fb;
-  border-left:4px solid var(--accent);border-radius:14px;padding:20px 22px}
-.proof-box p{margin-top:8px;font-size:14.5px;line-height:1.65;color:var(--text)}
-.proof-box code{background:var(--ink);color:#eef;padding:2px 7px;border-radius:6px;font-size:13px}
-[data-theme="dark"] .proof-box{background:linear-gradient(120deg,#16203a,#0f2436);border-color:#2a3757}
+/* "Qwen reads / Math judges" split: both halves of the design, side by side */
+.split-box{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.split-half{background:linear-gradient(180deg,#f3f0ff,#f8f9ff);border:1px solid #ddd6fb;
+  border-top:4px solid #7c6cf0;border-radius:14px;padding:20px 22px}
+.split-half.alt{background:linear-gradient(180deg,#eafcff,#f3fbff);border-color:#c7e6f2;border-top-color:var(--accent2)}
+.split-half p{margin-top:8px;font-size:14px;line-height:1.62;color:var(--text)}
+.split-half code{background:var(--ink);color:#eef;padding:2px 7px;border-radius:6px;font-size:12.5px;
+  white-space:nowrap}
+[data-theme="dark"] .split-half{background:linear-gradient(180deg,#1a1830,#141a2a);border-color:#33305a}
+[data-theme="dark"] .split-half.alt{background:linear-gradient(180deg,#0f2436,#121a2a);border-color:#244557}
+@media (max-width:640px){.split-box{grid-template-columns:1fr}}
 
 /* Roadmap lists */
 .rlist{list-style:none;margin:4px 0 0;padding:0}

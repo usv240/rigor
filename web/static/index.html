@@ -208,13 +208,22 @@
            calls. Rigor even points to the single number most likely at fault. You stay in control:
            dismiss any false positive, then export the finalized report.</p></div></div>
     </div>
-    <div class="proof-box">
-      <span class="cc-tag">The proof it is not a wrapper</span>
-      <p>Do not take our word for it: the verdict engine runs with the AI switched off. Run
-         <code>python -m rigor.benchmark_checks</code> with no API key and it scores
-         <b>100% precision and recall</b> on 530 injected-error cases. Delete the model entirely and
-         you still have a correct statistics engine. The AI only reads the paper; it never decides a
-         single verdict.</p>
+    <div class="split-box">
+      <div class="split-half">
+        <span class="cc-tag">Qwen reads</span>
+        <p>The math is useless until something can read a real paper, and only a strong LLM can do it.
+           Rigor uses <b>Qwen on Alibaba Cloud</b> to turn messy, free-form scientific prose into clean
+           structured data through <b>native function calling</b>, runs it as a <b>multi-turn tool-calling
+           agent</b> that decides what to check, and exposes the checks over <b>MCP</b> so other Qwen
+           agents can use them. This is the part only AI can do.</p>
+      </div>
+      <div class="split-half alt">
+        <span class="cc-tag">Math judges</span>
+        <p>Every verdict is exact arithmetic, never the model. The proof: turn the AI off and run
+           <code>python -m rigor.benchmark_checks</code> with no API key. It scores <b>100% precision
+           and recall</b> on 530 cases. Qwen reads the paper; it never decides a single verdict, so no
+           verdict can be hallucinated.</p>
+      </div>
     </div>
   </div>
 </section>
