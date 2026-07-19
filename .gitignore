@@ -33,3 +33,7 @@ Rules.md
 
 # Personal demo delivery notes (not part of the product)
 docs/demo-script.md
+
+# Real published papers used for local testing - COPYRIGHTED, never commit.
+# Rigor's shipped examples are the synthetic PDFs in web/static/samples/.
+Papers/
