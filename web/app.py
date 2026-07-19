@@ -91,6 +91,40 @@ def samples() -> dict:
     return {"samples": SAMPLES}
 
 
+_status_cache = {"qwen_ts": 0.0, "qwen_ok": None}
+
+
+@app.get("/api/status")
+def status() -> dict:
+    """Live status of the stack Rigor runs on. The math engine is checked instantly; the
+    Qwen reachability is a cheap ping cached for 60s so visitors do not rack up API calls.
+    If this endpoint answers at all, the Alibaba Cloud ECS host is up."""
+    try:
+        from rigor.checks import check_pvalue
+        check_pvalue("t", 2.0, 0.05, df1=10)
+        engine_ok = True
+    except Exception:  # noqa: BLE001
+        engine_ok = False
+
+    now = time.time()
+    if now - _status_cache["qwen_ts"] > 60:
+        try:
+            from rigor.llm import ping
+            _status_cache["qwen_ok"] = bool(ping())
+        except Exception:  # noqa: BLE001
+            _status_cache["qwen_ok"] = False
+        _status_cache["qwen_ts"] = now
+
+    return {
+        "components": [
+            {"name": "Alibaba Cloud ECS", "detail": "backend host", "ok": True},
+            {"name": "Qwen (Model Studio)", "detail": "reads papers, powers the agent",
+             "ok": bool(_status_cache["qwen_ok"])},
+            {"name": "Deterministic engine", "detail": "renders every verdict", "ok": engine_ok},
+        ]
+    }
+
+
 @app.post("/api/audit")
 @limiter.limit("10/minute")
 def api_audit(request: Request, body: AuditIn) -> JSONResponse:

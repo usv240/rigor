@@ -24,6 +24,7 @@
       <a href="#how">How it works</a>
       <a href="#checks">The checks</a>
       <a href="#beyond">Beyond</a>
+      <a href="#agent">Agent</a>
       <a href="#impact">Impact</a>
       <a href="#faq">FAQ</a>
       <a href="#try">Try it</a>
@@ -69,6 +70,13 @@
       <div class="n">Free</div>
       <div class="l">open-source, and built for the <b>author</b>, not just publishers with big budgets</div>
     </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="statusbar" id="statusbar">
+    <span class="sb-title">Live stack</span>
+    <span class="sb-item"><span class="sb-dot sb-wait"></span>checking...</span>
   </div>
 </div>
 
@@ -328,6 +336,39 @@
         <div class="ex">26 papers screened in one pass<br>sorted <span class="r">worst</span> &rarr; <span class="g">cleanest</span></div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ===== THE AGENT ===== -->
+<section id="agent" style="background:#fff">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">The agent</span>
+      <h2>Not a pipeline. A Qwen agent that investigates.</h2>
+      <p>Beyond the fixed checks, Rigor runs Qwen as a real <b>multi-turn tool-calling agent</b>. It
+         decides what to check, calls each deterministic tool itself, reasons about the results, and
+         writes a plain-language verdict. Even the agent never computes a verdict, only the tools do,
+         so it cannot hallucinate one. This is the Track 4 shape: ambiguous input in, tool use and
+         reasoning out.</p>
+    </div>
+    <div class="agentwrap">
+      <div class="agent-loop">
+        <div class="al-step"><span class="al-n">1</span><div><b>Plan</b><span>reads the paper and decides which checks matter</span></div></div>
+        <div class="al-step"><span class="al-n">2</span><div><b>Call tools</b><span>invokes recompute_pvalue, grim_test, check_df_vs_n itself</span></div></div>
+        <div class="al-step"><span class="al-n">3</span><div><b>Reason</b><span>weighs each result: decision-flipping error or minor?</span></div></div>
+        <div class="al-step"><span class="al-n">4</span><div><b>Verdict</b><span>writes whether the problems are systematic or isolated</span></div></div>
+      </div>
+      <div class="agent-trace" aria-hidden="true">
+        <div class="at-line at-dim">reading the paper and deciding what to check...</div>
+        <div class="at-line">call <b>recompute_pvalue</b>(t=1.90, df=48) <span class="at-bad">-&gt; INCONSISTENT (p=0.063)</span></div>
+        <div class="at-line">call <b>grim_test</b>(mean=3.45, n=10) <span class="at-bad">-&gt; IMPOSSIBLE</span></div>
+        <div class="at-line">call <b>check_df_vs_n</b>(df=48, n=10) <span class="at-bad">-&gt; needs N &ge; 49</span></div>
+        <div class="at-line at-dim">reasoning: the errors are systematic, not one-off typos...</div>
+        <div class="at-line at-good">VERDICT: the reported statistics do not support the paper's conclusions.</div>
+      </div>
+    </div>
+    <p class="agent-foot">Try it live: the <b>Run agent analysis</b> button streams every step as it
+       happens. Also available as <code>POST /api/agent</code> and over MCP for other Qwen agents.</p>
   </div>
 </section>
 

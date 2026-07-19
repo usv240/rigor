@@ -28,6 +28,23 @@ const SORT = { ERROR: 0, WARNING: 1, OK: 2 };
 let dismissed = new Set();  // finding ids the human reviewer has dismissed
 let lastR = null;
 
+// Live status of the stack: green dot per component when it is up. Real check
+// (Qwen ping is cached server-side), refreshed every 60s.
+function loadStatus() {
+  const bar = document.getElementById("statusbar");
+  if (!bar) return;
+  fetch("/api/status").then(r => r.json()).then(d => {
+    const dots = (d.components || []).map(c =>
+      `<span class="sb-item"><span class="sb-dot ${c.ok ? "sb-ok" : "sb-down"}" title="${c.ok ? "online" : "unreachable"}"></span>${esc(c.name)}<span class="sb-detail">${esc(c.detail || "")}</span></span>`
+    ).join("");
+    bar.innerHTML = `<span class="sb-title">Live stack</span>${dots}`;
+  }).catch(() => {
+    bar.innerHTML = `<span class="sb-title">Live stack</span><span class="sb-item"><span class="sb-dot sb-down"></span>status unavailable</span>`;
+  });
+}
+loadStatus();
+setInterval(loadStatus, 60000);
+
 // One-click example papers (all synthetic; real papers are copyrighted, so we link
 // those by DOI instead of hosting them).
 fetch("/api/samples").then(r => r.json()).then(d => {
