@@ -261,6 +261,9 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
   border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;transition:.15s}
 .samplebtn:hover{border-color:var(--accent);color:var(--accent)}
 .samplebtn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.pdf-examples{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6}
+.pdf-examples a{color:var(--accent);font-weight:600}
+.pdf-note{display:block;font-size:12px;opacity:.85;margin-top:2px}
 @media (max-width:560px){.an-grid{grid-template-columns:1fr}}
 
 /* ---- agent activity (live stream) ---- */
