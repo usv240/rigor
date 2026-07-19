@@ -264,6 +264,21 @@ button:focus-visible,.chip:focus-visible,textarea:focus-visible,a.btn:focus-visi
 .pdf-examples{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6}
 .pdf-examples a{color:var(--accent);font-weight:600}
 .pdf-note{display:block;font-size:12px;opacity:.85;margin-top:2px}
+
+/* "Not a wrapper" proof callout */
+.proof-box{margin-top:24px;background:linear-gradient(120deg,#eef1ff,#eafcff);border:1px solid #cdd7fb;
+  border-left:4px solid var(--accent);border-radius:14px;padding:20px 22px}
+.proof-box p{margin-top:8px;font-size:14.5px;line-height:1.65;color:var(--text)}
+.proof-box code{background:var(--ink);color:#eef;padding:2px 7px;border-radius:6px;font-size:13px}
+[data-theme="dark"] .proof-box{background:linear-gradient(120deg,#16203a,#0f2436);border-color:#2a3757}
+
+/* Roadmap lists */
+.rlist{list-style:none;margin:4px 0 0;padding:0}
+.rlist li{position:relative;padding:6px 0 6px 22px;font-size:14px;line-height:1.55;
+  border-top:1px solid var(--line)}
+.rlist li:first-child{border-top:none}
+.rlist li::before{content:"→";position:absolute;left:0;color:var(--accent);font-weight:800}
+.rnote{margin-top:12px;font-size:13px;color:var(--muted);line-height:1.6}
 @media (max-width:560px){.an-grid{grid-template-columns:1fr}}
 
 /* ---- agent activity (live stream) ---- */

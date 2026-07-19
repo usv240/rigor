@@ -97,9 +97,16 @@ deterministic code own anything that must be correct. That division is what turn
 LLM demo into a tool people can trust.
 
 ## What's next
-Scale the validation to a large corpus of retracted/corrected papers; add
-recompute-from-summary-stats; support more test types and one-tailed detection;
-integrate the batch tool into a submission-portal webhook so screening runs on upload.
+More provable checks on the same deterministic core: recompute the test statistic
+from reported means/SDs/Ns, more test types and one-tailed detection, confidence-
+interval consistency, and sample-size consistency across a whole paper. Scale the
+validation to a large corpus of retracted/corrected papers, and wire the batch tool
+into a submission-portal webhook so screening runs on upload.
+
+Out of scope on purpose (different problems, different tools): data-fabrication
+detection via digit analysis, image/figure forensics, and method-validity checks.
+We name these rather than pretend to cover them; a tool that claims to catch every
+error is either dishonest or an unreliable oracle, and Rigor stays provable.
 
 ## Built with
 python, qwen, alibaba-cloud, model-studio, dashscope, fastapi, scipy, pymupdf, mcp,

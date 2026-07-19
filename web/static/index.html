@@ -208,6 +208,14 @@
            calls. Rigor even points to the single number most likely at fault. You stay in control:
            dismiss any false positive, then export the finalized report.</p></div></div>
     </div>
+    <div class="proof-box">
+      <span class="cc-tag">The proof it is not a wrapper</span>
+      <p>Do not take our word for it: the verdict engine runs with the AI switched off. Run
+         <code>python -m rigor.benchmark_checks</code> with no API key and it scores
+         <b>100% precision and recall</b> on 530 injected-error cases. Delete the model entirely and
+         you still have a correct statistics engine. The AI only reads the paper; it never decides a
+         single verdict.</p>
+    </div>
   </div>
 </section>
 
@@ -455,6 +463,40 @@
         530 injected-error cases (offline, reproducible), and the full pipeline is 100%/0% on a 32-case set; a large
         real-paper evaluation is still future work, and we say so rather than overclaim.</li>
     </ul>
+  </div>
+</section>
+
+<!-- ===== ROADMAP ===== -->
+<section id="roadmap">
+  <div class="wrap">
+    <div class="head">
+      <span class="eyebrow">Roadmap</span>
+      <h2>Where it goes next</h2>
+      <p>Rigor deliberately checks what it can prove. The path forward is more provable checks,
+         not an AI that guesses. Here is the honest split.</p>
+    </div>
+    <div class="grid2">
+      <div class="mcard">
+        <h4>More provable checks, same deterministic core</h4>
+        <ul class="rlist">
+          <li>Recompute the test statistic itself from reported means, SDs, and Ns.</li>
+          <li>More test types and one-tailed detection, beyond t, F, chi-square, r, z.</li>
+          <li>Confidence interval vs point estimate vs standard error consistency.</li>
+          <li>Sample-size consistency across a whole paper.</li>
+          <li>Scale validation to a large corpus of retracted and corrected papers.</li>
+        </ul>
+      </div>
+      <div class="mcard">
+        <h4>Different problems, different tools, out of scope on purpose</h4>
+        <ul class="rlist">
+          <li>Data fabrication via digit and distribution analysis (probabilistic, not a proof).</li>
+          <li>Image and figure manipulation (forensics, a separate technology).</li>
+          <li>Method validity and p-hacking (needs the raw data and the analysis code).</li>
+        </ul>
+        <p class="rnote">We name these rather than pretend to cover them. A tool that claims to catch
+          every error is either dishonest or an unreliable oracle. Rigor stays provable.</p>
+      </div>
+    </div>
   </div>
 </section>
 
