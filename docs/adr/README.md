@@ -30,5 +30,6 @@ flowchart TD
 - [0007 - Reconcile several extractions, and report the agreement](0007-extraction-reconciliation.md)
 - [0008 - Localize the error, don't just detect it](0008-error-localization.md)
 - [0009 - Ship an adoption surface (CLI, batch, GitHub Action)](0009-adoption-surface.md)
+- [0010 - Show impact, but only with numbers we can cite or compute](0010-honest-impact-metrics.md)
 
 The full system view is in [../architecture.md](../architecture.md).
