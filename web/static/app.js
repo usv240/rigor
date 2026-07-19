@@ -413,8 +413,18 @@ function applyFilter(f) {
     el.style.display = (f === "all" || el.dataset.sev === f) ? "" : "none";
   });
   report.querySelectorAll(".fsection").forEach(sec => {
-    const any = [...sec.querySelectorAll(".finding")].some(el => el.style.display !== "none");
-    sec.style.display = any ? "" : "none";
+    const cards = [...sec.querySelectorAll(".finding")];
+    const visible = cards.filter(el => el.style.display !== "none");
+    sec.style.display = visible.length ? "" : "none";
+    // Keep the header badges honest: show counts for what is actually visible.
+    const total = sec.querySelector(".fscount:not(.err)");
+    if (total) total.textContent = visible.length;
+    const errBadge = sec.querySelector(".fscount.err");
+    if (errBadge) {
+      const visErr = visible.filter(el => el.dataset.sev === "ERROR").length;
+      errBadge.textContent = `${visErr} error${visErr !== 1 ? "s" : ""}`;
+      errBadge.style.display = visErr ? "" : "none";
+    }
   });
 }
 
